@@ -57,11 +57,13 @@ public abstract class FluxBaseHandler implements HttpHandler {
                 String userRole = getLoggedRole(exchange);
                 String userDept = getLoggedDepartment(exchange);
                 boolean hasAccess = false;
-                if (pageAllow.role().length == 0) {
+                Object[] pageRolesArr = (Object[]) pageAllow.role();
+                if (pageRolesArr.length == 0) {
                     hasAccess = true;
                 } else {
-                    for (String r : pageAllow.role()) {
-                        if (r.equalsIgnoreCase(userRole)) {
+                    for (Object r : pageRolesArr) {
+                        String rName = (r instanceof Enum) ? ((Enum<?>) r).name() : String.valueOf(r);
+                        if (rName.equalsIgnoreCase(userRole)) {
                             hasAccess = true;
                             break;
                         }
@@ -73,10 +75,13 @@ public abstract class FluxBaseHandler implements HttpHandler {
                     }
                 }
                 if (!hasAccess) {
+                    String allowedRolesStr = java.util.Arrays.stream((Object[]) pageAllow.role())
+                            .map(r -> (r instanceof Enum) ? ((Enum<?>) r).name() : String.valueOf(r))
+                            .collect(java.util.stream.Collectors.joining(","));
                     io.jettra.flux.widgets.Modal modal = io.jettra.flux.widgets.Modal.of(
                         io.jettra.flux.widgets.Column.of(
                             io.jettra.flux.widgets.Label.of("Acceso Denegado").modifier(new io.jettra.flux.core.Modifier().cssClass("bold").padding(10)),
-                            io.jettra.flux.widgets.Paragraph.of("No tienes los permisos (" + String.join(",", pageAllow.role()) + ") necesarios para ver esta página."),
+                            io.jettra.flux.widgets.Paragraph.of("No tienes los permisos (" + allowedRolesStr + ") necesarios para ver esta página."),
                             io.jettra.flux.widgets.Paragraph.of("<button onclick=\"window.location.href='" + io.jettra.server.JettraServer.resolvePath("/login") + "'\" style=\"padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px;\">Cerrar</button>")
                         )
                     );
@@ -132,11 +137,13 @@ public abstract class FluxBaseHandler implements HttpHandler {
                         String userRole = getLoggedRole(exchange);
                         String userDept = getLoggedDepartment(exchange);
                         boolean hasAccess = false;
-                        if (actionAllow.role().length == 0) {
+                        Object[] actionRolesArr = (Object[]) actionAllow.role();
+                        if (actionRolesArr.length == 0) {
                             hasAccess = true;
                         } else {
-                            for (String r : actionAllow.role()) {
-                                if (r.equalsIgnoreCase(userRole)) {
+                            for (Object r : actionRolesArr) {
+                                String rName = (r instanceof Enum) ? ((Enum<?>) r).name() : String.valueOf(r);
+                                if (rName.equalsIgnoreCase(userRole)) {
                                     hasAccess = true;
                                     break;
                                 }
