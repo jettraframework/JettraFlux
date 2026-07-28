@@ -57,13 +57,24 @@ public abstract class FluxBaseHandler implements HttpHandler {
                 String userRole = getLoggedRole(exchange);
                 String userDept = getLoggedDepartment(exchange);
                 boolean hasAccess = false;
-                Object[] pageRolesArr = (Object[]) pageAllow.role();
-                if (pageRolesArr.length == 0) {
+                java.util.List<String> requiredRoles = new java.util.ArrayList<>();
+                try {
+                    Object[] pageRolesArr = (Object[]) pageAllow.role();
+                    for (Object r : pageRolesArr) {
+                        requiredRoles.add((r instanceof Enum) ? ((Enum<?>) r).name() : String.valueOf(r));
+                    }
+                } catch (java.lang.annotation.AnnotationTypeMismatchException e) {
+                    java.util.regex.Matcher m = java.util.regex.Pattern.compile("AppRole\\.([A-Z0-9_]+)").matcher(e.getMessage());
+                    while (m.find()) {
+                        requiredRoles.add(m.group(1));
+                    }
+                }
+
+                if (requiredRoles.isEmpty()) {
                     hasAccess = true;
                 } else {
-                    for (Object r : pageRolesArr) {
-                        String rName = (r instanceof Enum) ? ((Enum<?>) r).name() : String.valueOf(r);
-                        if (rName.equalsIgnoreCase(userRole)) {
+                    for (String rName : requiredRoles) {
+                        if (rName.equalsIgnoreCase(userRole) || checkSynonym(rName, userRole)) {
                             hasAccess = true;
                             break;
                         }
@@ -75,9 +86,7 @@ public abstract class FluxBaseHandler implements HttpHandler {
                     }
                 }
                 if (!hasAccess) {
-                    String allowedRolesStr = java.util.Arrays.stream((Object[]) pageAllow.role())
-                            .map(r -> (r instanceof Enum) ? ((Enum<?>) r).name() : String.valueOf(r))
-                            .collect(java.util.stream.Collectors.joining(","));
+                    String allowedRolesStr = String.join(",", requiredRoles);
                     io.jettra.flux.widgets.Modal modal = io.jettra.flux.widgets.Modal.of(
                         io.jettra.flux.widgets.Column.of(
                             io.jettra.flux.widgets.Label.of("Acceso Denegado").modifier(new io.jettra.flux.core.Modifier().cssClass("bold").padding(10)),
@@ -137,13 +146,24 @@ public abstract class FluxBaseHandler implements HttpHandler {
                         String userRole = getLoggedRole(exchange);
                         String userDept = getLoggedDepartment(exchange);
                         boolean hasAccess = false;
-                        Object[] actionRolesArr = (Object[]) actionAllow.role();
-                        if (actionRolesArr.length == 0) {
+                        java.util.List<String> actionRoles = new java.util.ArrayList<>();
+                        try {
+                            Object[] actionRolesArr = (Object[]) actionAllow.role();
+                            for (Object r : actionRolesArr) {
+                                actionRoles.add((r instanceof Enum) ? ((Enum<?>) r).name() : String.valueOf(r));
+                            }
+                        } catch (java.lang.annotation.AnnotationTypeMismatchException e) {
+                            java.util.regex.Matcher m = java.util.regex.Pattern.compile("AppRole\\.([A-Z0-9_]+)").matcher(e.getMessage());
+                            while (m.find()) {
+                                actionRoles.add(m.group(1));
+                            }
+                        }
+
+                        if (actionRoles.isEmpty()) {
                             hasAccess = true;
                         } else {
-                            for (Object r : actionRolesArr) {
-                                String rName = (r instanceof Enum) ? ((Enum<?>) r).name() : String.valueOf(r);
-                                if (rName.equalsIgnoreCase(userRole)) {
+                            for (String rName : actionRoles) {
+                                if (rName.equalsIgnoreCase(userRole) || checkSynonym(rName, userRole)) {
                                     hasAccess = true;
                                     break;
                                 }
@@ -493,5 +513,26 @@ public abstract class FluxBaseHandler implements HttpHandler {
                .append("  \n")
                .append("  setInterval(checkJettraSync, 5000);\n")
                .append("</script>\n");
+    }
+
+    private boolean checkSynonym(String pluginRole, String userRole) {
+        try {
+            java.io.InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("plugin-config.json");
+            if (is != null) {
+                String content = new String(is.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                String pRoleStr = "\"plugin-role\"\\s*:\\s*\"" + pluginRole + "\"";
+                String aRoleStr = "\"application-role\"\\s*:\\s*\"" + userRole + "\"";
+                String[] blocks = content.split("\\{");
+                for (String block : blocks) {
+                    if (java.util.regex.Pattern.compile(pRoleStr).matcher(block).find() &&
+                        java.util.regex.Pattern.compile(aRoleStr).matcher(block).find()) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            // ignore
+        }
+        return false;
     }
 }
