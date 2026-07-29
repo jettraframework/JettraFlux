@@ -2,7 +2,7 @@ package io.jettra.flux.processor;
 
 import com.google.auto.service.AutoService;
 import com.squareup.javapoet.*;
-import io.jettra.flux.annotations.model.ModelToRecordConversor;
+import io.jettra.core.flux.FluxModelToRecordConversor;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
@@ -53,7 +53,7 @@ public class RenderedCrudProcessor extends AbstractProcessor {
         TypeName dataAccessTypeName = TypeName.get(dataAccessType);
 
         TypeElement modelElement = (TypeElement) processingEnv.getTypeUtils().asElement(modelType);
-        ModelToRecordConversor conversorAnno = modelElement.getAnnotation(ModelToRecordConversor.class);
+        FluxModelToRecordConversor conversorAnno = modelElement.getAnnotation(FluxModelToRecordConversor.class);
         boolean hasConversor = conversorAnno != null;
         TypeName conversorTypeName = null;
         if (hasConversor) {
@@ -62,11 +62,18 @@ public class RenderedCrudProcessor extends AbstractProcessor {
             TypeMirror goalType = getGoalType(conversorAnno);
             String recordClassName;
             if (goalType != null && !goalType.toString().equals("void")) {
-                recordClassName = ((TypeElement) processingEnv.getTypeUtils().asElement(goalType)).getSimpleName().toString();
+                Element goalElement = processingEnv.getTypeUtils().asElement(goalType);
+                if (goalElement != null) {
+                    recordClassName = goalElement.getSimpleName().toString();
+                } else {
+                    String typeStr = goalType.toString();
+                    int lastDot = typeStr.lastIndexOf('.');
+                    recordClassName = lastDot != -1 ? typeStr.substring(lastDot + 1) : typeStr;
+                }
             } else {
                 recordClassName = modelClassName.endsWith("Model") ? modelClassName.substring(0, modelClassName.length() - 5) : modelClassName + "Record";
             }
-            String conversorClassName = recordClassName + "RecordModelConverter";
+            String conversorClassName = recordClassName + "ModelConversor";
             conversorTypeName = ClassName.get(modelPackageName, conversorClassName);
         }
 
@@ -505,7 +512,7 @@ public class RenderedCrudProcessor extends AbstractProcessor {
         return null;
     }
 
-    private TypeMirror getGoalType(ModelToRecordConversor annotation) {
+    private TypeMirror getGoalType(FluxModelToRecordConversor annotation) {
         try {
             annotation.goal();
         } catch (MirroredTypeException mte) {

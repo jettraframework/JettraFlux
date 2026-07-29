@@ -4,7 +4,7 @@ La anotación `@RenderedCrud` permite la generación de código en tiempo de com
 
 ## Requisitos
 
-1. Asegúrate de que tu modelo esté correctamente mapeado (por ejemplo, con `@ModelToRecordConversor`).
+1. Asegúrate de que tu modelo esté correctamente mapeado (por ejemplo, con `@FluxModelToRecordConversor`).
 2. El repositorio debe contener métodos como `findAll`, `save`, `delete`, etc.
 3. El proyecto debe depender de `JettraFlux` y `JettraReport` si se van a generar visores de impresión.
 
