@@ -24,6 +24,9 @@ public class FluxCLI {
         String sourceRecord = null;
         boolean isModel = false;
         boolean isProperties = false;
+        boolean isRest = false;
+        boolean isServices = false;
+        boolean isConverter = false;
 
         for (int i = 0; i < argList.size(); i++) {
             String arg = argList.get(i);
@@ -35,6 +38,12 @@ public class FluxCLI {
                 isModel = true;
             } else if ("-properties".equalsIgnoreCase(arg) || "properties".equalsIgnoreCase(arg)) {
                 isProperties = true;
+            } else if ("-rest".equalsIgnoreCase(arg) || "rest".equalsIgnoreCase(arg)) {
+                isRest = true;
+            } else if ("-services".equalsIgnoreCase(arg) || "services".equalsIgnoreCase(arg)) {
+                isServices = true;
+            } else if ("-converter".equalsIgnoreCase(arg) || "converter".equalsIgnoreCase(arg)) {
+                isConverter = true;
             }
         }
 
@@ -42,9 +51,20 @@ public class FluxCLI {
             case "-create-code":
             case "create-code":
                 if (sourceRecord != null && isModel) {
-                    generateViewModel(sourceRecord, isProperties);
+                    List<String[]> parsedFields = generateViewModel(sourceRecord, isProperties);
+                    if (parsedFields != null) {
+                        if (isConverter) {
+                            generateConverter(sourceRecord, parsedFields);
+                        }
+                        if (isRest) {
+                            generateRestClient(sourceRecord, parsedFields);
+                        }
+                        if (isServices) {
+                            generateService(sourceRecord);
+                        }
+                    }
                 } else {
-                    System.out.println("Missing arguments. Usage: ./mvn-flux -create-code -source-record <Paquete.Record> -model [-properties]");
+                    System.out.println("Missing arguments. Usage: ./mvn-flux -create-code -source-record <Paquete.Record> -model [-properties] [-converter] [-rest] [-services]");
                 }
                 break;
             case "help":
@@ -66,17 +86,17 @@ public class FluxCLI {
         System.out.println("====================================================================================================");
         System.out.println("Comandos disponibles:\n");
         System.out.println("  -create-code           Genera código fuente automáticamente.");
-        System.out.println("                   Sintaxis: ./mvn-flux -create-code -source-record <Paquete.Record> -model [-properties]");
-        System.out.println("                     Ejemplo: ./mvn-flux -create-code -source-record com.example.entity.Person -model -properties\n");
+        System.out.println("                   Sintaxis: ./mvn-flux -create-code -source-record <Paquete.Record> -model [-properties] [-converter] [-rest] [-services]");
+        System.out.println("                     Ejemplo: ./mvn-flux -create-code -source-record com.example.entity.Person -model -properties -converter -rest -services\n");
     }
 
-    private static void generateViewModel(String sourceRecord, boolean generateProperties) {
+    private static List<String[]> generateViewModel(String sourceRecord, boolean generateProperties) {
         try {
             String relativePath = "src/main/java/" + sourceRecord.replace(".", "/") + ".java";
             Path recordPath = Paths.get(relativePath);
             if (!Files.exists(recordPath)) {
                 System.out.println("Error: Source record file not found at " + relativePath);
-                return;
+                return null;
             }
 
             String content = new String(Files.readAllBytes(recordPath), StandardCharsets.UTF_8);
@@ -92,13 +112,13 @@ public class FluxCLI {
             int recordIdx = content.indexOf("record ");
             if (recordIdx == -1) {
                 System.out.println("Error: Could not find 'record' keyword in " + relativePath);
-                return;
+                return null;
             }
             int nameStart = recordIdx + "record ".length();
             int parenStart = content.indexOf("(", nameStart);
             if (parenStart == -1) {
                 System.out.println("Error: Could not find '(' after record name.");
-                return;
+                return null;
             }
             String recordName = content.substring(nameStart, parenStart).trim();
             if (recordName.contains("<")) {
@@ -119,7 +139,7 @@ public class FluxCLI {
             }
             if (parenEnd == -1) {
                 System.out.println("Error: Could not find matching ')' for record.");
-                return;
+                return null;
             }
             String fieldsContent = content.substring(parenStart + 1, parenEnd).trim();
 
@@ -165,7 +185,6 @@ public class FluxCLI {
             // Generate imports
             sb.append("import ").append(sourceRecord).append(";\n");
             sb.append("import io.jettra.flux.annotations.JettraViewModel;\n");
-            sb.append("import io.jettra.core.flux.FluxModelToRecordConversor;\n");
             sb.append("import io.jettra.flux.annotations.PropertiesInRecord;\n");
             sb.append("import io.jettra.flux.annotations.PropertiesLabel;\n");
             sb.append("import io.jettra.flux.annotations.ViewSelectOne;\n");
@@ -210,7 +229,6 @@ public class FluxCLI {
             sb.append("\n");
 
             sb.append("@JettraViewModel\n");
-            sb.append("@FluxModelToRecordConversor(goal = ").append(recordName).append(".class)\n");
             sb.append("public class ").append(modelClassName).append(" {\n\n");
 
             for (String[] field : parsedFields) {
@@ -269,10 +287,13 @@ public class FluxCLI {
             if (generateProperties) {
                 updatePropertiesFiles(recordName, parsedFields);
             }
+            
+            return parsedFields;
 
         } catch (Exception e) {
             System.err.println("Failed to generate ViewModel: " + e.getMessage());
             e.printStackTrace();
+            return null;
         }
     }
 
@@ -332,5 +353,188 @@ public class FluxCLI {
     private static String capitalize(String str) {
         if (str == null || str.isEmpty()) return str;
         return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
+    private static void generateRestClient(String sourceRecord, List<String[]> parsedFields) {
+        try {
+            int lastDot = sourceRecord.lastIndexOf('.');
+            String originalPackage = sourceRecord.substring(0, lastDot);
+            String recordName = sourceRecord.substring(lastDot + 1);
+
+            String restClientPackage = originalPackage.replace(".entity", ".restclient");
+            String clientClassName = recordName + "RestClient";
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("package ").append(restClientPackage).append(";\n\n");
+            
+            sb.append("import ").append(sourceRecord).append(";\n");
+            sb.append("import io.jettra.rest.annotations.DELETE;\n");
+            sb.append("import io.jettra.rest.annotations.GET;\n");
+            sb.append("import io.jettra.rest.annotations.POST;\n");
+            sb.append("import io.jettra.rest.annotations.PUT;\n");
+            sb.append("import io.jettra.rest.annotations.Path;\n");
+            sb.append("import io.jettra.rest.annotations.PathParam;\n");
+            sb.append("import io.jettra.rest.client.RestClient;\n");
+            sb.append("import java.util.List;\n\n");
+
+            String baseUriModule = "api";
+            String[] pkgParts = originalPackage.split("\\.");
+            if (pkgParts.length > 2) {
+                baseUriModule = pkgParts[pkgParts.length - 2];
+            }
+            String pluralEndpoint = "/api/" + baseUriModule + "/" + recordName.toLowerCase() + "s";
+
+            sb.append("@RestClient(baseUri = \"").append(pluralEndpoint).append("\")\n");
+            sb.append("public interface ").append(clientClassName).append(" {\n\n");
+
+            sb.append("    @GET\n");
+            sb.append("    List<").append(recordName).append("> findAll();\n\n");
+
+            sb.append("    @POST\n");
+            sb.append("    void save(").append(recordName).append(" ").append(recordName.toLowerCase()).append(");\n\n");
+
+            sb.append("    @PUT\n");
+            sb.append("    void update(").append(recordName).append(" ").append(recordName.toLowerCase()).append(");\n\n");
+
+            sb.append("    @DELETE\n");
+            sb.append("    @Path(\"/{id}\")\n");
+            sb.append("    void delete(@PathParam(\"id\") String id);\n");
+            
+            for (String[] field : parsedFields) {
+                String type = field[0];
+                String name = field[1];
+                sb.append("\n    @GET\n");
+                sb.append("    @Path(\"/").append(name.toLowerCase()).append("/{").append(name).append("}\")\n");
+                sb.append("    List<").append(recordName).append("> findBy").append(capitalize(name)).append("(@PathParam(\"").append(name).append("\") ").append(type).append(" ").append(name).append(");\n");
+            }
+            
+            sb.append("}\n");
+
+            String outputRelativePath = "src/main/java/" + restClientPackage.replace(".", "/") + "/" + clientClassName + ".java";
+            Path outputPath = Paths.get(outputRelativePath);
+            Files.createDirectories(outputPath.getParent());
+            Files.write(outputPath, sb.toString().getBytes(StandardCharsets.UTF_8));
+            
+            System.out.println("Generated RestClient: " + outputRelativePath);
+
+        } catch (Exception e) {
+            System.err.println("Failed to generate RestClient: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private static void generateService(String sourceRecord) {
+        try {
+            int lastDot = sourceRecord.lastIndexOf('.');
+            String originalPackage = sourceRecord.substring(0, lastDot);
+            String recordName = sourceRecord.substring(lastDot + 1);
+
+            String servicePackage = originalPackage.replace(".entity", ".services");
+            String serviceClassName = recordName + "Service";
+            
+            String restClientPackage = originalPackage.replace(".entity", ".restclient");
+            String clientClassName = recordName + "RestClient";
+            
+            String modelPackage = originalPackage.replace(".entity", ".converter");
+            String modelConversorClassName = recordName + "ModelConversor";
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("package ").append(servicePackage).append(";\n\n");
+            
+            sb.append("import ").append(sourceRecord).append(";\n");
+            sb.append("import ").append(restClientPackage).append(".").append(clientClassName).append(";\n");
+            sb.append("import io.jettra.core.inject.annotation.Inject;\n");
+            sb.append("import java.util.List;\n\n");
+
+            sb.append("public class ").append(serviceClassName).append(" {\n\n");
+
+            sb.append("    @Inject\n");
+            sb.append("    private ").append(clientClassName).append(" client;\n\n");
+
+            sb.append("    public List<").append(recordName).append("> findAll() {\n");
+            sb.append("        List<").append(recordName).append("> records = client.findAll();\n");
+            sb.append("        if (records == null) return List.of();\n");
+            sb.append("        return records;\n");
+            sb.append("    }\n\n");
+
+            sb.append("    public void save(").append(recordName).append(" record) {\n");
+            sb.append("        client.save(record);\n");
+            sb.append("    }\n\n");
+
+            sb.append("    public void delete(String id) {\n");
+            sb.append("        client.delete(id);\n");
+            sb.append("    }\n");
+            sb.append("}\n");
+
+            String outputRelativePath = "src/main/java/" + servicePackage.replace(".", "/") + "/" + serviceClassName + ".java";
+            Path outputPath = Paths.get(outputRelativePath);
+            Files.createDirectories(outputPath.getParent());
+            Files.write(outputPath, sb.toString().getBytes(StandardCharsets.UTF_8));
+            
+            System.out.println("Generated Service: " + outputRelativePath);
+
+        } catch (Exception e) {
+            System.err.println("Failed to generate Service: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private static void generateConverter(String sourceRecord, List<String[]> parsedFields) {
+        try {
+            int lastDot = sourceRecord.lastIndexOf('.');
+            String originalPackage = sourceRecord.substring(0, lastDot);
+            String recordName = sourceRecord.substring(lastDot + 1);
+
+            String converterPackage = originalPackage.replace(".entity", ".converter");
+            String converterClassName = recordName + "ModelConversor";
+            String modelPackage = originalPackage.replace(".entity", ".model");
+            String modelClassName = recordName + "Model";
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("package ").append(converterPackage).append(";\n\n");
+            
+            sb.append("import ").append(sourceRecord).append(";\n");
+            sb.append("import ").append(modelPackage).append(".").append(modelClassName).append(";\n");
+            sb.append("import io.jettra.scoped.ApplicationScoped;\n\n");
+
+            sb.append("@ApplicationScoped\n");
+            sb.append("public class ").append(converterClassName).append(" {\n");
+            
+            sb.append("  public ").append(modelClassName).append(" toModel(").append(recordName).append(" record) {\n");
+            sb.append("    if (record == null) {\n      return null;\n    }\n");
+            sb.append("    ").append(modelClassName).append(" model = new ").append(modelClassName).append("();\n");
+            for (String[] field : parsedFields) {
+                String name = field[1];
+                sb.append("    model.set").append(capitalize(name)).append("(record.").append(name).append("());\n");
+            }
+            sb.append("    return model;\n");
+            sb.append("  }\n\n");
+            
+            sb.append("  public ").append(recordName).append(" toRecord(").append(modelClassName).append(" model) {\n");
+            sb.append("    if (model == null) {\n      return null;\n    }\n");
+            sb.append("    return new ").append(recordName).append("(\n");
+            for (int i = 0; i < parsedFields.size(); i++) {
+                String name = parsedFields.get(i)[1];
+                sb.append("          model.get").append(capitalize(name)).append("()");
+                if (i < parsedFields.size() - 1) {
+                    sb.append(",");
+                }
+                sb.append("\n");
+            }
+            sb.append("        );\n");
+            sb.append("  }\n");
+            sb.append("}\n");
+
+            String outputRelativePath = "src/main/java/" + converterPackage.replace(".", "/") + "/" + converterClassName + ".java";
+            Path outputPath = Paths.get(outputRelativePath);
+            Files.createDirectories(outputPath.getParent());
+            Files.write(outputPath, sb.toString().getBytes(StandardCharsets.UTF_8));
+            
+            System.out.println("Generated Converter: " + outputRelativePath);
+
+        } catch (Exception e) {
+            System.err.println("Failed to generate Converter: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
