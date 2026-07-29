@@ -129,27 +129,6 @@ public class FluxCLI {
             StringBuilder sb = new StringBuilder();
             sb.append("package ").append(modelPackage).append(";\n\n");
             
-            // Generate imports
-            sb.append("import ").append(sourceRecord).append(";\n");
-            sb.append("import io.jettra.flux.annotations.JettraViewModel;\n");
-            sb.append("import io.jettra.core.flux.FluxModelToRecordConversor;\n");
-            sb.append("import io.jettra.flux.annotations.PropertiesInRecord;\n");
-            sb.append("import io.jettra.flux.annotations.PropertiesLabel;\n");
-            sb.append("import io.jettra.flux.annotations.ViewSelectOne;\n");
-            sb.append("import io.jettra.flux.annotations.ViewSelectMany;\n");
-            sb.append("import io.jettra.flux.annotations.TableColumnField;\n");
-            sb.append("import io.jettra.rules.validations.NotNull;\n");
-            
-            java.util.regex.Matcher importMatcher = java.util.regex.Pattern.compile("import\\s+([^;]+);").matcher(content);
-            while (importMatcher.find()) {
-                sb.append("import ").append(importMatcher.group(1).trim()).append(";\n");
-            }
-            sb.append("\n");
-
-            sb.append("@JettraViewModel\n");
-            sb.append("@FluxModelToRecordConversor(goal = ").append(recordName).append(".class)\n");
-            sb.append("public class ").append(modelClassName).append(" {\n\n");
-
             List<String[]> parsedFields = new ArrayList<>();
             if (!fieldsContent.isEmpty()) {
                 List<String> rawFieldsList = new ArrayList<>();
@@ -182,6 +161,57 @@ public class FluxCLI {
                     }
                 }
             }
+            
+            // Generate imports
+            sb.append("import ").append(sourceRecord).append(";\n");
+            sb.append("import io.jettra.flux.annotations.JettraViewModel;\n");
+            sb.append("import io.jettra.core.flux.FluxModelToRecordConversor;\n");
+            sb.append("import io.jettra.flux.annotations.PropertiesInRecord;\n");
+            sb.append("import io.jettra.flux.annotations.PropertiesLabel;\n");
+            sb.append("import io.jettra.flux.annotations.ViewSelectOne;\n");
+            sb.append("import io.jettra.flux.annotations.ViewSelectMany;\n");
+            sb.append("import io.jettra.flux.annotations.TableColumnField;\n");
+            sb.append("import io.jettra.rules.validations.NotNull;\n");
+            
+            List<String> existingImports = new ArrayList<>();
+            java.util.regex.Matcher importMatcher = java.util.regex.Pattern.compile("import\\s+([^;]+);").matcher(content);
+            while (importMatcher.find()) {
+                String imp = importMatcher.group(1).trim();
+                existingImports.add(imp);
+                sb.append("import ").append(imp).append(";\n");
+            }
+            
+            // Identify referenced entities and add imports for them
+            for (String[] field : parsedFields) {
+                String type = field[0];
+                String entityType = type;
+                if (type.startsWith("List<") || type.startsWith("Set<") || type.startsWith("Collection<")) {
+                    entityType = type.substring(type.indexOf('<') + 1, type.indexOf('>'));
+                }
+                
+                boolean isBasic = entityType.equals("String") || entityType.equals("Integer") || entityType.equals("Boolean") 
+                                || entityType.equals("UUID") || entityType.equals("Long") || entityType.equals("Double") 
+                                || entityType.equals("int") || entityType.equals("boolean") || entityType.equals("long") || entityType.equals("double");
+                
+                if (!isBasic) {
+                    boolean alreadyImported = false;
+                    for (String imp : existingImports) {
+                        if (imp.endsWith("." + entityType)) {
+                            alreadyImported = true;
+                            break;
+                        }
+                    }
+                    if (!alreadyImported) {
+                        sb.append("import ").append(originalPackage).append(".").append(entityType).append(";\n");
+                        existingImports.add(originalPackage + "." + entityType);
+                    }
+                }
+            }
+            sb.append("\n");
+
+            sb.append("@JettraViewModel\n");
+            sb.append("@FluxModelToRecordConversor(goal = ").append(recordName).append(".class)\n");
+            sb.append("public class ").append(modelClassName).append(" {\n\n");
 
             for (String[] field : parsedFields) {
                 String type = field[0];
