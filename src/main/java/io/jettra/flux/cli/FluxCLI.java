@@ -1078,18 +1078,17 @@ public class FluxCLI {
             sb.append("import io.jettra.rest.annotations.QueryParam;\n");
             sb.append("import io.jettra.rest.annotations.Produces;\n");
             sb.append("import io.jettra.rest.annotations.Secured;\n");
-            sb.append("import io.jettra.rest.annotations.accreditation.DeclareRoles;\n");
             sb.append("import io.jettra.rest.annotations.accreditation.RolesAllowed;\n");
             sb.append("import io.jettra.rest.core.Response;\n");
             sb.append("import io.jettra.server.discoverer.Discovered;\n");
             sb.append("import io.jettra.server.openapi.annotations.OpenApi;\n");
             sb.append("import io.jettra.server.openapi.annotations.Operation;\n");
+            sb.append("import jcf.systemRole;\n");
             sb.append("import java.util.List;\n\n");
 
             sb.append("@Secured\n");
             sb.append("@Path(\"").append(endpointPath).append("\")\n");
-            sb.append("@DeclareRoles({\"ADMIN\", \"MANAGER\"})\n");
-            sb.append("@RolesAllowed({\"ADMIN\"})\n");
+            sb.append("@RolesAllowed({systemRole.ADMIN})\n");
             sb.append("@Discovered\n");
             sb.append("@OpenApi(title = \"").append(recordName).append("\", version = \"v1.0\", description = \"API for ").append(recordName).append(" management\")\n");
             sb.append("public class ").append(controllerName).append(" {\n\n");
