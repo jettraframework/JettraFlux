@@ -4,16 +4,23 @@ JettraFlux incluye una potente herramienta de CLI integrada a través de `mvn-fl
 
 ## Uso de la CLI
 
-Para generar un ViewModel a partir de una entidad existente, ejecuta el siguiente comando en la terminal desde la raíz de tu proyecto:
+Para generar un ViewModel a partir de una entidad o paquete de entidades existentes, ejecuta el siguiente comando en la terminal desde la raíz de tu proyecto:
 
+**Por entidad específica:**
 ```bash
 ./mvn-flux -create-code -source-record com.miempresa.proyecto.entity.MiEntidad -model
+```
+
+**Por paquete completo de entidades:**
+```bash
+./mvn-flux -create-code -source-package-record com.miempresa.proyecto.entity -model
 ```
 
 ### Parámetros:
 - `-create-code`: Indica que el CLI debe entrar en el modo de generación de código.
 - `-source-record` (o `-from-record`): Recibe como parámetro la ruta absoluta (Fully Qualified Name) de la clase `record` de la entidad.
-- `-model`: Indica que el objetivo es generar una clase ViewModel para la interfaz web.
+- `-source-package-record` (o `-from-package-record`): Recibe como parámetro el nombre del paquete (e.g. `com.miempresa.proyecto.entity`) para procesar masivamente todos los `records` que contiene.
+- `-model`: Indica que el objetivo es generar las clases ViewModel para la interfaz web.
 
 ## Qué hace el generador
 

@@ -20,8 +20,16 @@ public class FluxCLI {
             argList.add(arg);
         }
 
+        for (String arg : argList) {
+            if ("-help".equalsIgnoreCase(arg) || "--help".equalsIgnoreCase(arg) || "help".equalsIgnoreCase(arg) || "-h".equalsIgnoreCase(arg)) {
+                showHelp();
+                return;
+            }
+        }
+
         String command = argList.get(0);
         String sourceRecord = null;
+        String sourcePackageRecord = null;
         boolean isModel = false;
         boolean isProperties = false;
         boolean isRest = false;
@@ -34,6 +42,8 @@ public class FluxCLI {
 
             if ("-source-record".equalsIgnoreCase(arg) || "-from-record".equalsIgnoreCase(arg) || "source-record".equalsIgnoreCase(arg) || "from-record".equalsIgnoreCase(arg)) {
                 if (nextArg != null) sourceRecord = nextArg;
+            } else if ("-source-package-record".equalsIgnoreCase(arg) || "-from-package-record".equalsIgnoreCase(arg) || "source-package-record".equalsIgnoreCase(arg) || "from-package-record".equalsIgnoreCase(arg)) {
+                if (nextArg != null) sourcePackageRecord = nextArg;
             } else if ("-model".equalsIgnoreCase(arg) || "model".equalsIgnoreCase(arg)) {
                 isModel = true;
             } else if ("-properties".equalsIgnoreCase(arg) || "properties".equalsIgnoreCase(arg)) {
@@ -47,31 +57,58 @@ public class FluxCLI {
             }
         }
 
+        List<String> sourceRecords = new ArrayList<>();
+        if (sourceRecord != null) {
+            sourceRecords.add(sourceRecord);
+        }
+        if (sourcePackageRecord != null) {
+            String relativePath = "src/main/java/" + sourcePackageRecord.replace(".", "/");
+            Path packagePath = Paths.get(relativePath);
+            if (!Files.exists(packagePath) || !Files.isDirectory(packagePath)) {
+                System.out.println("Error: Source package directory not found at " + relativePath);
+            } else {
+                try (java.util.stream.Stream<Path> stream = Files.list(packagePath)) {
+                    List<Path> javaFiles = stream.filter(p -> Files.isRegularFile(p) && p.toString().endsWith(".java"))
+                            .sorted()
+                            .collect(java.util.stream.Collectors.toList());
+                    java.util.regex.Pattern recordPattern = java.util.regex.Pattern.compile("\\brecord\\s+\\w+");
+                    for (Path file : javaFiles) {
+                        String content = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
+                        if (recordPattern.matcher(content).find()) {
+                            String fileName = file.getFileName().toString();
+                            String className = fileName.substring(0, fileName.length() - 5);
+                            sourceRecords.add(sourcePackageRecord + "." + className);
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error reading package directory: " + e.getMessage());
+                }
+            }
+        }
+
         switch (command.toLowerCase()) {
             case "-create-code":
             case "create-code":
-                if (sourceRecord != null && isModel) {
-                    List<String[]> parsedFields = generateViewModel(sourceRecord, isProperties);
-                    if (parsedFields != null) {
-                        if (isConverter) {
-                            generateConverter(sourceRecord, parsedFields);
-                        }
-                        if (isRest) {
-                            generateRestClient(sourceRecord, parsedFields);
-                        }
-                        if (isServices) {
-                            generateService(sourceRecord);
+                if (!sourceRecords.isEmpty() && isModel) {
+                    for (String rec : sourceRecords) {
+                        List<String[]> parsedFields = generateViewModel(rec, isProperties);
+                        if (parsedFields != null) {
+                            if (isConverter) {
+                                generateConverter(rec, parsedFields);
+                            }
+                            if (isRest) {
+                                generateRestClient(rec, parsedFields);
+                            }
+                            if (isServices) {
+                                generateService(rec, parsedFields);
+                            }
                         }
                     }
                 } else {
-                    System.out.println("Missing arguments. Usage: ./mvn-flux -create-code -source-record <Paquete.Record> -model [-properties] [-converter] [-rest] [-services]");
+                    System.out.println("Missing arguments. Usage:");
+                    System.out.println("  ./mvn-flux -create-code -source-record <Paquete.Record> -model [-properties] [-converter] [-rest] [-services]");
+                    System.out.println("  ./mvn-flux -create-code -source-package-record <Paquete> -model [-properties] [-converter] [-rest] [-services]");
                 }
-                break;
-            case "help":
-            case "-help":
-            case "--help":
-            case "-h":
-                showHelp();
                 break;
             default:
                 System.out.println("Unknown command: " + command);
@@ -81,13 +118,152 @@ public class FluxCLI {
     }
 
     private static void showHelp() {
-        System.out.println("JettraFlux CLI - Menú de Ayuda");
-        System.out.println("Uso: ./mvn-flux <comando> [parámetros/opciones]");
         System.out.println("====================================================================================================");
-        System.out.println("Comandos disponibles:\n");
-        System.out.println("  -create-code           Genera código fuente automáticamente.");
-        System.out.println("                   Sintaxis: ./mvn-flux -create-code -source-record <Paquete.Record> -model [-properties] [-converter] [-rest] [-services]");
-        System.out.println("                     Ejemplo: ./mvn-flux -create-code -source-record com.example.entity.Person -model -properties -converter -rest -services\n");
+        System.out.println("                            JettraFlux CLI - Menú de Ayuda");
+        System.out.println("====================================================================================================");
+        System.out.println("Uso: ./mvn-flux <comando> [parámetros/opciones]\n");
+        System.out.println("COMANDOS DISPONIBLES:");
+        System.out.println("  -create-code           Genera código fuente automáticamente a partir de entidades (records).");
+        System.out.println("  -help                  Muestra este menú de ayuda explicativo en la consola.\n");
+        System.out.println("PARÁMETROS Y OPCIONES PARA -create-code:");
+        System.out.println("  -source-record <FQN>            Especifica la ruta completa (Fully Qualified Name) de un record.");
+        System.out.println("                                  (Ejemplo: com.example.entity.Person)");
+        System.out.println("                                  Alias: -from-record, source-record, from-record\n");
+        System.out.println("  -source-package-record <Pkg>    Especifica el paquete para procesar masivamente todos sus records.");
+        System.out.println("                                  (Ejemplo: com.example.entity)");
+        System.out.println("                                  Alias: -from-package-record, source-package-record, from-package-record\n");
+        System.out.println("  -model                          [Requerido] Genera la clase ViewModel (<Nombre>Model.java).");
+        System.out.println("  -properties                     Escanea y actualiza los archivos messages*.properties con las etiquetas.");
+        System.out.println("  -converter                      Genera la clase conversora (<Nombre>ModelConversor.java).");
+        System.out.println("  -rest                           Genera la interfaz cliente REST (<Nombre>RestClient.java).");
+        System.out.println("  -services                       Genera la clase de servicio (<Nombre>Service.java).\n");
+        System.out.println("EJEMPLOS DE USO:");
+        System.out.println("  1. Por un Record individual:");
+        System.out.println("     ./mvn-flux -create-code -source-record com.example.entity.Person -model -properties -converter -rest -services\n");
+        System.out.println("  2. Por un paquete completo de Records:");
+        System.out.println("     ./mvn-flux -create-code -source-package-record com.example.entity -model -properties -converter -rest -services");
+        System.out.println("====================================================================================================");
+    }
+
+    private static List<String> extractRecordImports(String sourceRecord, List<String[]> parsedFields) {
+        List<String> imports = new ArrayList<>();
+        int lastDot = sourceRecord.lastIndexOf('.');
+        String originalPackage = (lastDot != -1) ? sourceRecord.substring(0, lastDot) : "";
+
+        try {
+            String relativePath = "src/main/java/" + sourceRecord.replace(".", "/") + ".java";
+            Path recordPath = Paths.get(relativePath);
+            if (Files.exists(recordPath)) {
+                String content = new String(Files.readAllBytes(recordPath), StandardCharsets.UTF_8);
+                java.util.regex.Matcher importMatcher = java.util.regex.Pattern.compile("import\\s+([^;]+);").matcher(content);
+                while (importMatcher.find()) {
+                    String imp = importMatcher.group(1).trim();
+                    if (!imports.contains(imp)) {
+                        imports.add(imp);
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        if (parsedFields != null) {
+            for (String[] field : parsedFields) {
+                String type = field[0];
+                String coreType = type;
+                if (type.startsWith("List<") || type.startsWith("Set<") || type.startsWith("Collection<")) {
+                    coreType = type.substring(type.indexOf('<') + 1, type.indexOf('>')).trim();
+                }
+                if (coreType.contains("<")) {
+                    coreType = coreType.substring(0, coreType.indexOf('<')).trim();
+                }
+
+                addStandardImport(imports, coreType, originalPackage);
+            }
+        }
+
+        return imports;
+    }
+
+    private static boolean isBasicType(String type) {
+        if (type == null) return false;
+        if (type.startsWith("List<") || type.startsWith("Set<") || type.startsWith("Collection<") || type.startsWith("Map<")) {
+            return false;
+        }
+        return type.equals("String") || type.equals("Character") || type.equals("char")
+            || type.equals("Integer") || type.equals("int")
+            || type.equals("Long") || type.equals("long")
+            || type.equals("Double") || type.equals("double")
+            || type.equals("Float") || type.equals("float")
+            || type.equals("Short") || type.equals("short")
+            || type.equals("Byte") || type.equals("byte")
+            || type.equals("Boolean") || type.equals("boolean")
+            || type.equals("BigDecimal") || type.equals("BigInteger")
+            || type.equals("UUID")
+            || type.equals("LocalDate") || type.equals("LocalDateTime") || type.equals("LocalTime")
+            || type.equals("ZonedDateTime") || type.equals("OffsetDateTime") || type.equals("Instant")
+            || type.equals("Date");
+    }
+
+    private static void addStandardImport(List<String> imports, String type, String originalPackage) {
+        String imp = null;
+        switch (type) {
+            case "LocalDate":
+                imp = "java.time.LocalDate";
+                break;
+            case "LocalDateTime":
+                imp = "java.time.LocalDateTime";
+                break;
+            case "LocalTime":
+                imp = "java.time.LocalTime";
+                break;
+            case "ZonedDateTime":
+                imp = "java.time.ZonedDateTime";
+                break;
+            case "OffsetDateTime":
+                imp = "java.time.OffsetDateTime";
+                break;
+            case "Instant":
+                imp = "java.time.Instant";
+                break;
+            case "Date":
+                imp = "java.util.Date";
+                break;
+            case "UUID":
+                imp = "java.util.UUID";
+                break;
+            case "BigDecimal":
+                imp = "java.math.BigDecimal";
+                break;
+            case "BigInteger":
+                imp = "java.math.BigInteger";
+                break;
+            case "Set":
+                imp = "java.util.Set";
+                break;
+            case "List":
+                imp = "java.util.List";
+                break;
+            case "Map":
+                imp = "java.util.Map";
+                break;
+            default:
+                if (!isBasicType(type) && !originalPackage.isEmpty()) {
+                    boolean exists = false;
+                    for (String existing : imports) {
+                        if (existing.endsWith("." + type)) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists) {
+                        imp = originalPackage + "." + type;
+                    }
+                }
+                break;
+        }
+
+        if (imp != null && !imports.contains(imp)) {
+            imports.add(imp);
+        }
     }
 
     private static List<String[]> generateViewModel(String sourceRecord, boolean generateProperties) {
@@ -199,6 +375,23 @@ public class FluxCLI {
                 existingImports.add(imp);
                 sb.append("import ").append(imp).append(";\n");
             }
+
+            List<String> recordImports = extractRecordImports(sourceRecord, parsedFields);
+            for (String imp : recordImports) {
+                if (!imp.equals(sourceRecord) && !imp.startsWith("io.jettra.flux.") && !imp.startsWith("io.jettra.rules.")) {
+                    boolean exists = false;
+                    for (String existing : existingImports) {
+                        if (existing.equals(imp)) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists) {
+                        sb.append("import ").append(imp).append(";\n");
+                        existingImports.add(imp);
+                    }
+                }
+            }
             
             // Identify referenced entities and add imports for them
             for (String[] field : parsedFields) {
@@ -208,11 +401,7 @@ public class FluxCLI {
                     entityType = type.substring(type.indexOf('<') + 1, type.indexOf('>'));
                 }
                 
-                boolean isBasic = entityType.equals("String") || entityType.equals("Integer") || entityType.equals("Boolean") 
-                                || entityType.equals("UUID") || entityType.equals("Long") || entityType.equals("Double") 
-                                || entityType.equals("int") || entityType.equals("boolean") || entityType.equals("long") || entityType.equals("double");
-                
-                if (!isBasic) {
+                if (!isBasicType(entityType)) {
                     boolean alreadyImported = false;
                     for (String imp : existingImports) {
                         if (imp.endsWith("." + entityType)) {
@@ -238,9 +427,7 @@ public class FluxCLI {
                 sb.append("    @PropertiesInRecord\n");
                 sb.append("    @PropertiesLabel(value = \"").append(recordName.toLowerCase()).append(".").append(name).append("\", label = \"").append(capitalize(name)).append("\")\n");
                 
-                boolean isBasic = type.equals("String") || type.equals("Integer") || type.equals("Boolean") || type.equals("UUID") || type.equals("Long") || type.equals("Double") || type.equals("int") || type.equals("boolean") || type.equals("long") || type.equals("double");
-                
-                if (isBasic) {
+                if (isBasicType(type)) {
                     if (type.equals("String")) {
                         sb.append("    @NotNull\n");
                     }
@@ -375,7 +562,15 @@ public class FluxCLI {
             sb.append("import io.jettra.rest.annotations.Path;\n");
             sb.append("import io.jettra.rest.annotations.PathParam;\n");
             sb.append("import io.jettra.rest.client.RestClient;\n");
-            sb.append("import java.util.List;\n\n");
+            sb.append("import java.util.List;\n");
+
+            List<String> recordImports = extractRecordImports(sourceRecord, parsedFields);
+            for (String imp : recordImports) {
+                if (!imp.startsWith("io.jettra.rest.") && !imp.equals("java.util.List") && !imp.equals(sourceRecord)) {
+                    sb.append("import ").append(imp).append(";\n");
+                }
+            }
+            sb.append("\n");
 
             String baseUriModule = "api";
             String[] pkgParts = originalPackage.split("\\.");
@@ -423,7 +618,7 @@ public class FluxCLI {
         }
     }
 
-    private static void generateService(String sourceRecord) {
+    private static void generateService(String sourceRecord, List<String[]> parsedFields) {
         try {
             int lastDot = sourceRecord.lastIndexOf('.');
             String originalPackage = sourceRecord.substring(0, lastDot);
@@ -434,9 +629,6 @@ public class FluxCLI {
             
             String restClientPackage = originalPackage.replace(".entity", ".restclient");
             String clientClassName = recordName + "RestClient";
-            
-            String modelPackage = originalPackage.replace(".entity", ".converter");
-            String modelConversorClassName = recordName + "ModelConversor";
 
             StringBuilder sb = new StringBuilder();
             sb.append("package ").append(servicePackage).append(";\n\n");
@@ -444,7 +636,15 @@ public class FluxCLI {
             sb.append("import ").append(sourceRecord).append(";\n");
             sb.append("import ").append(restClientPackage).append(".").append(clientClassName).append(";\n");
             sb.append("import io.jettra.core.inject.annotation.Inject;\n");
-            sb.append("import java.util.List;\n\n");
+            sb.append("import java.util.List;\n");
+
+            List<String> recordImports = extractRecordImports(sourceRecord, parsedFields);
+            for (String imp : recordImports) {
+                if (!imp.equals(sourceRecord) && !imp.equals("java.util.List") && !imp.startsWith("io.jettra.core.")) {
+                    sb.append("import ").append(imp).append(";\n");
+                }
+            }
+            sb.append("\n");
 
             sb.append("public class ").append(serviceClassName).append(" {\n\n");
 
@@ -464,6 +664,19 @@ public class FluxCLI {
             sb.append("    public void delete(String id) {\n");
             sb.append("        client.delete(id);\n");
             sb.append("    }\n");
+
+            if (parsedFields != null) {
+                for (String[] field : parsedFields) {
+                    String type = field[0];
+                    String name = field[1];
+                    sb.append("\n    public List<").append(recordName).append("> findBy").append(capitalize(name)).append("(").append(type).append(" ").append(name).append(") {\n");
+                    sb.append("        List<").append(recordName).append("> records = client.findBy").append(capitalize(name)).append("(").append(name).append(");\n");
+                    sb.append("        if (records == null) return List.of();\n");
+                    sb.append("        return records;\n");
+                    sb.append("    }\n");
+                }
+            }
+
             sb.append("}\n");
 
             String outputRelativePath = "src/main/java/" + servicePackage.replace(".", "/") + "/" + serviceClassName + ".java";
@@ -495,7 +708,15 @@ public class FluxCLI {
             
             sb.append("import ").append(sourceRecord).append(";\n");
             sb.append("import ").append(modelPackage).append(".").append(modelClassName).append(";\n");
-            sb.append("import io.jettra.scoped.ApplicationScoped;\n\n");
+            sb.append("import io.jettra.scoped.ApplicationScoped;\n");
+
+            List<String> recordImports = extractRecordImports(sourceRecord, parsedFields);
+            for (String imp : recordImports) {
+                if (!imp.equals(sourceRecord) && !imp.startsWith("io.jettra.scoped.")) {
+                    sb.append("import ").append(imp).append(";\n");
+                }
+            }
+            sb.append("\n");
 
             sb.append("@ApplicationScoped\n");
             sb.append("public class ").append(converterClassName).append(" {\n");
