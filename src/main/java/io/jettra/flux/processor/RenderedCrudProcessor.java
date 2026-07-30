@@ -73,7 +73,7 @@ public class RenderedCrudProcessor extends AbstractProcessor {
             } else {
                 recordClassName = modelClassName.endsWith("Model") ? modelClassName.substring(0, modelClassName.length() - 5) : modelClassName + "Record";
             }
-            String conversorClassName = recordClassName + "ModelConversor";
+            String conversorClassName = recordClassName + "ModelConverter";
             conversorTypeName = ClassName.get(modelPackageName, conversorClassName);
         }
 

@@ -6,7 +6,7 @@ El procesador de anotaciones buscará los campos de la clase Model y los mapear�
 
 ## ¿Qué hace exactamente el procesador?
 
-Al aplicar `@FluxModelToRecordConversor` sobre una clase de modelo, se genera una nueva clase conversora (por ejemplo, `PersonModelConversor` para un modelo llamado `PersonModel` o un record destino `Person`) anotada con `@ApplicationScoped`.
+Al aplicar `@FluxModelToRecordConversor` sobre una clase de modelo, se genera una nueva clase conversora (por ejemplo, `PersonModelConverter` para un modelo llamado `PersonModel` o un record destino `Person`) anotada con `@ApplicationScoped`.
 
 Esta clase generada provee dos métodos:
 1. `toModel(Record record)`: Instancia un nuevo objeto del modelo y le asigna los valores extraídos del Record.
@@ -43,7 +43,7 @@ import io.jettra.rules.validations.Email;
 import io.jettra.wui.core.annotations.PropertiesLabel;
 
 @JettraViewModel
-@FluxModelToRecordConversor // <-- Genera PersonModelConversor
+@FluxModelToRecordConversor // <-- Genera PersonModelConverter
 public class PersonModel {
 
     @NotNull
@@ -64,13 +64,13 @@ public class PersonModel {
 
 ### 3. Clase Generada en Tiempo de Compilación
 
-Al compilar el proyecto, se generará la clase `PersonModelConversor`. Internamente se verá de manera similar a lo siguiente:
+Al compilar el proyecto, se generará la clase `PersonModelConverter`. Internamente se verá de manera similar a lo siguiente:
 
 ```java
 import io.jettra.scoped.ApplicationScoped;
 
 @ApplicationScoped
-public class PersonModelConversor {
+public class PersonModelConverter {
 
     public PersonModel toModel(Person record) {
         if (record == null) {
@@ -109,7 +109,7 @@ import io.jettra.core.inject.annotation.Inject;
 
 public class PersonService {
     @Inject
-    private PersonModelConversor converter;
+    private PersonModelConverter converter;
     
     public void save(PersonModel personModel) {
         Person person = converter.toRecord(personModel);

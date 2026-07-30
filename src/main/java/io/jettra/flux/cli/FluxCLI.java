@@ -35,6 +35,11 @@ public class FluxCLI {
         boolean isRest = false;
         boolean isServices = false;
         boolean isConverter = false;
+        boolean isPage = false;
+        boolean isPageCrud = false;
+        boolean isTestRest = false;
+        boolean isTestService = false;
+        boolean isTestPage = false;
 
         for (int i = 0; i < argList.size(); i++) {
             String arg = argList.get(i);
@@ -54,6 +59,16 @@ public class FluxCLI {
                 isServices = true;
             } else if ("-converter".equalsIgnoreCase(arg) || "converter".equalsIgnoreCase(arg)) {
                 isConverter = true;
+            } else if ("-page".equalsIgnoreCase(arg) || "page".equalsIgnoreCase(arg)) {
+                isPage = true;
+            } else if ("-page-crud".equalsIgnoreCase(arg) || "page-crud".equalsIgnoreCase(arg)) {
+                isPageCrud = true;
+            } else if ("-test-rest".equalsIgnoreCase(arg) || "test-rest".equalsIgnoreCase(arg)) {
+                isTestRest = true;
+            } else if ("-test-service".equalsIgnoreCase(arg) || "test-service".equalsIgnoreCase(arg)) {
+                isTestService = true;
+            } else if ("-test-page".equalsIgnoreCase(arg) || "test-page".equalsIgnoreCase(arg)) {
+                isTestPage = true;
             }
         }
 
@@ -102,12 +117,27 @@ public class FluxCLI {
                             if (isServices) {
                                 generateService(rec, parsedFields);
                             }
+                            if (isPage) {
+                                generatePage(rec, parsedFields, false);
+                            }
+                            if (isPageCrud) {
+                                generatePage(rec, parsedFields, true);
+                            }
+                            if (isTestRest) {
+                                generateTestRest(rec, parsedFields);
+                            }
+                            if (isTestService) {
+                                generateTestService(rec, parsedFields);
+                            }
+                            if (isTestPage) {
+                                generateTestPage(rec, parsedFields);
+                            }
                         }
                     }
                 } else {
                     System.out.println("Missing arguments. Usage:");
-                    System.out.println("  ./mvn-flux -create-code -source-record <Paquete.Record> -model [-properties] [-converter] [-rest] [-services]");
-                    System.out.println("  ./mvn-flux -create-code -source-package-record <Paquete> -model [-properties] [-converter] [-rest] [-services]");
+                    System.out.println("  ./mvn-flux -create-code -source-record <Paquete.Record> -model [-properties] [-converter] [-rest] [-services] [-page] [-page-crud] [-test-rest] [-test-service] [-test-page]");
+                    System.out.println("  ./mvn-flux -create-code -source-package-record <Paquete> -model [-properties] [-converter] [-rest] [-services] [-page] [-page-crud] [-test-rest] [-test-service] [-test-page]");
                 }
                 break;
             default:
@@ -134,9 +164,14 @@ public class FluxCLI {
         System.out.println("                                  Alias: -from-package-record, source-package-record, from-package-record\n");
         System.out.println("  -model                          [Requerido] Genera la clase ViewModel (<Nombre>Model.java).");
         System.out.println("  -properties                     Escanea y actualiza los archivos messages*.properties con las etiquetas.");
-        System.out.println("  -converter                      Genera la clase conversora (<Nombre>ModelConversor.java).");
+        System.out.println("  -converter                      Genera la clase conversora (<Nombre>ModelConverter.java).");
         System.out.println("  -rest                           Genera la interfaz cliente REST (<Nombre>RestClient.java).");
-        System.out.println("  -services                       Genera la clase de servicio (<Nombre>Service.java).\n");
+        System.out.println("  -services                       Genera la clase de servicio (<Nombre>Service.java).");
+        System.out.println("  -page                           Genera la página básica (<Nombre>Page.java).");
+        System.out.println("  -page-crud                      Genera la página CRUD completa (<Nombre>CrudPage.java).");
+        System.out.println("  -test-rest                      Genera las pruebas para los clientes REST.");
+        System.out.println("  -test-service                   Genera las pruebas para los servicios.");
+        System.out.println("  -test-page                      Genera las pruebas para las páginas.\n");
         System.out.println("EJEMPLOS DE USO:");
         System.out.println("  1. Por un Record individual:");
         System.out.println("     ./mvn-flux -create-code -source-record com.example.entity.Person -model -properties -converter -rest -services\n");
@@ -699,7 +734,7 @@ public class FluxCLI {
             String recordName = sourceRecord.substring(lastDot + 1);
 
             String converterPackage = originalPackage.replace(".entity", ".converter");
-            String converterClassName = recordName + "ModelConversor";
+            String converterClassName = recordName + "ModelConverter";
             String modelPackage = originalPackage.replace(".entity", ".model");
             String modelClassName = recordName + "Model";
 
@@ -756,6 +791,127 @@ public class FluxCLI {
         } catch (Exception e) {
             System.err.println("Failed to generate Converter: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+    private static void generatePage(String sourceRecord, List<String[]> parsedFields, boolean isCrud) {
+        try {
+            int lastDot = sourceRecord.lastIndexOf('.');
+            String originalPackage = sourceRecord.substring(0, lastDot);
+            String recordName = sourceRecord.substring(lastDot + 1);
+
+            String pagePackage = originalPackage.replace(".entity", ".pages");
+            String pageClassName = recordName + (isCrud ? "CrudPage" : "Page");
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("package ").append(pagePackage).append(";\n\n");
+            
+            sb.append("import ").append(sourceRecord).append(";\n");
+            sb.append("import io.jettra.flux.widgets.*;\n");
+            sb.append("import io.jettra.core.server.Page;\n");
+            sb.append("import io.jettra.flux.core.Widget;\n");
+            sb.append("import com.sun.net.httpserver.HttpExchange;\n");
+            sb.append("import java.util.Map;\n\n");
+
+            sb.append("@Page(path = \"/").append(recordName.toLowerCase()).append(isCrud ? "-crud" : "").append("\")\n");
+            sb.append("public class ").append(pageClassName).append(" {\n\n");
+            
+            sb.append("    protected Widget buildCenter(HttpExchange exchange, Map<String, String> params, String currentTheme) {\n");
+            
+            if (isCrud) {
+                sb.append("        return Column.of(Header.of(2, \"Gestión de ").append(recordName).append("\"),\n");
+                sb.append("                Paragraph.of(\"CRUD autogenerado para ").append(recordName).append("\")\n");
+                sb.append("        );\n");
+            } else {
+                sb.append("        return Column.of(Header.of(2, \"Página ").append(recordName).append("\"),\n");
+                sb.append("                Paragraph.of(\"Página básica autogenerada para ").append(recordName).append("\")\n");
+                sb.append("        );\n");
+            }
+            
+            sb.append("    }\n");
+            sb.append("}\n");
+
+            String outputRelativePath = "src/main/java/" + pagePackage.replace(".", "/") + "/" + pageClassName + ".java";
+            Path outputPath = Paths.get(outputRelativePath);
+            Files.createDirectories(outputPath.getParent());
+            Files.write(outputPath, sb.toString().getBytes(StandardCharsets.UTF_8));
+            System.out.println("Generated Page: " + outputRelativePath);
+        } catch (Exception e) {
+            System.err.println("Failed to generate Page: " + e.getMessage());
+        }
+    }
+
+    private static void generateTestRest(String sourceRecord, List<String[]> parsedFields) {
+        try {
+            int lastDot = sourceRecord.lastIndexOf('.');
+            String originalPackage = sourceRecord.substring(0, lastDot);
+            String recordName = sourceRecord.substring(lastDot + 1);
+
+            String testPackage = originalPackage.replace(".entity", ".restclient");
+            String testClassName = recordName + "RestClientTest";
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("package ").append(testPackage).append(";\n\n");
+            sb.append("public class ").append(testClassName).append(" {\n");
+            sb.append("    // TODO: Implement REST tests for ").append(recordName).append("\n");
+            sb.append("}\n");
+
+            String outputRelativePath = "src/test/java/" + testPackage.replace(".", "/") + "/" + testClassName + ".java";
+            Path outputPath = Paths.get(outputRelativePath);
+            Files.createDirectories(outputPath.getParent());
+            Files.write(outputPath, sb.toString().getBytes(StandardCharsets.UTF_8));
+            System.out.println("Generated Test Rest: " + outputRelativePath);
+        } catch (Exception e) {
+            System.err.println("Failed to generate Test Rest: " + e.getMessage());
+        }
+    }
+
+    private static void generateTestService(String sourceRecord, List<String[]> parsedFields) {
+        try {
+            int lastDot = sourceRecord.lastIndexOf('.');
+            String originalPackage = sourceRecord.substring(0, lastDot);
+            String recordName = sourceRecord.substring(lastDot + 1);
+
+            String testPackage = originalPackage.replace(".entity", ".services");
+            String testClassName = recordName + "ServiceTest";
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("package ").append(testPackage).append(";\n\n");
+            sb.append("public class ").append(testClassName).append(" {\n");
+            sb.append("    // TODO: Implement Service tests for ").append(recordName).append("\n");
+            sb.append("}\n");
+
+            String outputRelativePath = "src/test/java/" + testPackage.replace(".", "/") + "/" + testClassName + ".java";
+            Path outputPath = Paths.get(outputRelativePath);
+            Files.createDirectories(outputPath.getParent());
+            Files.write(outputPath, sb.toString().getBytes(StandardCharsets.UTF_8));
+            System.out.println("Generated Test Service: " + outputRelativePath);
+        } catch (Exception e) {
+            System.err.println("Failed to generate Test Service: " + e.getMessage());
+        }
+    }
+
+    private static void generateTestPage(String sourceRecord, List<String[]> parsedFields) {
+        try {
+            int lastDot = sourceRecord.lastIndexOf('.');
+            String originalPackage = sourceRecord.substring(0, lastDot);
+            String recordName = sourceRecord.substring(lastDot + 1);
+
+            String testPackage = originalPackage.replace(".entity", ".pages");
+            String testClassName = recordName + "PageTest";
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("package ").append(testPackage).append(";\n\n");
+            sb.append("public class ").append(testClassName).append(" {\n");
+            sb.append("    // TODO: Implement Page tests for ").append(recordName).append("\n");
+            sb.append("}\n");
+
+            String outputRelativePath = "src/test/java/" + testPackage.replace(".", "/") + "/" + testClassName + ".java";
+            Path outputPath = Paths.get(outputRelativePath);
+            Files.createDirectories(outputPath.getParent());
+            Files.write(outputPath, sb.toString().getBytes(StandardCharsets.UTF_8));
+            System.out.println("Generated Test Page: " + outputRelativePath);
+        } catch (Exception e) {
+            System.err.println("Failed to generate Test Page: " + e.getMessage());
         }
     }
 }

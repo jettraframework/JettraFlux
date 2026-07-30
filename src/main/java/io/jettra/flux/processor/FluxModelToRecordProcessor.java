@@ -52,7 +52,7 @@ public class FluxModelToRecordProcessor extends AbstractProcessor {
             recordTypeName = ClassName.get(packageName, recordClassName);
         }
 
-        String conversorClassName = recordClassName + "ModelConversor";
+        String conversorClassName = recordClassName + "ModelConverter";
 
         TypeSpec.Builder classBuilder = TypeSpec.classBuilder(conversorClassName)
                 .addModifiers(Modifier.PUBLIC)
