@@ -40,6 +40,8 @@ public class FluxCLI {
         boolean isTestRest = false;
         boolean isTestService = false;
         boolean isTestPage = false;
+        boolean isRepository = false;
+        boolean isController = false;
 
         for (int i = 0; i < argList.size(); i++) {
             String arg = argList.get(i);
@@ -67,6 +69,10 @@ public class FluxCLI {
                 isTestRest = true;
             } else if ("-test-service".equalsIgnoreCase(arg) || "test-service".equalsIgnoreCase(arg)) {
                 isTestService = true;
+            } else if ("-repository".equalsIgnoreCase(arg) || "repository".equalsIgnoreCase(arg)) {
+                isRepository = true;
+            } else if ("-controller".equalsIgnoreCase(arg) || "controller".equalsIgnoreCase(arg)) {
+                isController = true;
             } else if ("-test-page".equalsIgnoreCase(arg) || "test-page".equalsIgnoreCase(arg)) {
                 isTestPage = true;
             }
@@ -104,10 +110,13 @@ public class FluxCLI {
         switch (command.toLowerCase()) {
             case "-create-code":
             case "create-code":
-                if (!sourceRecords.isEmpty() && isModel) {
+                if (!sourceRecords.isEmpty()) {
                     for (String rec : sourceRecords) {
-                        List<String[]> parsedFields = generateViewModel(rec, isProperties);
+                        List<String[]> parsedFields = parseRecordFields(rec);
                         if (parsedFields != null) {
+                            if (isModel) {
+                                generateViewModel(rec, parsedFields, isProperties);
+                            }
                             if (isConverter) {
                                 generateConverter(rec, parsedFields);
                             }
@@ -132,12 +141,18 @@ public class FluxCLI {
                             if (isTestPage) {
                                 generateTestPage(rec, parsedFields);
                             }
+                            if (isRepository) {
+                                generateRepository(rec, parsedFields);
+                            }
+                            if (isController) {
+                                generateController(rec, parsedFields);
+                            }
                         }
                     }
                 } else {
                     System.out.println("Missing arguments. Usage:");
-                    System.out.println("  ./mvn-flux -create-code -source-record <Paquete.Record> -model [-properties] [-converter] [-rest] [-services] [-page] [-page-crud] [-test-rest] [-test-service] [-test-page]");
-                    System.out.println("  ./mvn-flux -create-code -source-package-record <Paquete> -model [-properties] [-converter] [-rest] [-services] [-page] [-page-crud] [-test-rest] [-test-service] [-test-page]");
+                    System.out.println("  ./mvn-flux -create-code -source-record <Paquete.Record> -model [-properties] [-converter] [-rest] [-services] [-page] [-page-crud] [-test-rest] [-test-service] [-test-page] [-repository] [-controller]");
+                    System.out.println("  ./mvn-flux -create-code -source-package-record <Paquete> -model [-properties] [-converter] [-rest] [-services] [-page] [-page-crud] [-test-rest] [-test-service] [-test-page] [-repository] [-controller]");
                 }
                 break;
             default:
@@ -171,7 +186,9 @@ public class FluxCLI {
         System.out.println("  -page-crud                      Genera la página CRUD completa (<Nombre>CrudPage.java).");
         System.out.println("  -test-rest                      Genera las pruebas para los clientes REST.");
         System.out.println("  -test-service                   Genera las pruebas para los servicios.");
-        System.out.println("  -test-page                      Genera las pruebas para las páginas.\n");
+        System.out.println("  -test-page                      Genera las pruebas para las páginas.");
+        System.out.println("  -repository                     Genera el repositorio (Interface e Impl) para un record.");
+        System.out.println("  -controller                     Genera el controlador REST para un record.\n");
         System.out.println("EJEMPLOS DE USO:");
         System.out.println("  1. Por un Record individual:");
         System.out.println("     ./mvn-flux -create-code -source-record com.example.entity.Person -model -properties -converter -rest -services\n");
@@ -301,7 +318,7 @@ public class FluxCLI {
         }
     }
 
-    private static List<String[]> generateViewModel(String sourceRecord, boolean generateProperties) {
+    private static List<String[]> parseRecordFields(String sourceRecord) {
         try {
             String relativePath = "src/main/java/" + sourceRecord.replace(".", "/") + ".java";
             Path recordPath = Paths.get(relativePath);
@@ -309,57 +326,23 @@ public class FluxCLI {
                 System.out.println("Error: Source record file not found at " + relativePath);
                 return null;
             }
-
             String content = new String(Files.readAllBytes(recordPath), StandardCharsets.UTF_8);
-
-            // Extract package
-            String originalPackage = "";
-            java.util.regex.Matcher pkgMatcher = java.util.regex.Pattern.compile("package\\s+([^;]+);").matcher(content);
-            if (pkgMatcher.find()) {
-                originalPackage = pkgMatcher.group(1).trim();
-            }
-
-            // Extract record name and fields robustly
             int recordIdx = content.indexOf("record ");
-            if (recordIdx == -1) {
-                System.out.println("Error: Could not find 'record' keyword in " + relativePath);
-                return null;
-            }
+            if (recordIdx == -1) return null;
             int nameStart = recordIdx + "record ".length();
             int parenStart = content.indexOf("(", nameStart);
-            if (parenStart == -1) {
-                System.out.println("Error: Could not find '(' after record name.");
-                return null;
-            }
-            String recordName = content.substring(nameStart, parenStart).trim();
-            if (recordName.contains("<")) {
-                recordName = recordName.substring(0, recordName.indexOf("<")).trim();
-            }
-
+            if (parenStart == -1) return null;
             int parenEnd = -1;
             int openCount = 0;
             for (int i = parenStart; i < content.length(); i++) {
                 if (content.charAt(i) == '(') openCount++;
                 else if (content.charAt(i) == ')') {
                     openCount--;
-                    if (openCount == 0) {
-                        parenEnd = i;
-                        break;
-                    }
+                    if (openCount == 0) { parenEnd = i; break; }
                 }
             }
-            if (parenEnd == -1) {
-                System.out.println("Error: Could not find matching ')' for record.");
-                return null;
-            }
+            if (parenEnd == -1) return null;
             String fieldsContent = content.substring(parenStart + 1, parenEnd).trim();
-
-            String modelPackage = originalPackage.replace(".entity", ".model");
-            String modelClassName = recordName + "Model";
-
-            StringBuilder sb = new StringBuilder();
-            sb.append("package ").append(modelPackage).append(";\n\n");
-            
             List<String[]> parsedFields = new ArrayList<>();
             if (!fieldsContent.isEmpty()) {
                 List<String> rawFieldsList = new ArrayList<>();
@@ -369,21 +352,14 @@ public class FluxCLI {
                     char c = fieldsContent.charAt(i);
                     if (c == '(') openParen++;
                     else if (c == ')') openParen--;
-                    
                     if (c == ',' && openParen == 0) {
                         rawFieldsList.add(currentField.toString());
                         currentField.setLength(0);
-                    } else {
-                        currentField.append(c);
-                    }
+                    } else { currentField.append(c); }
                 }
-                if (currentField.length() > 0) {
-                    rawFieldsList.add(currentField.toString());
-                }
-
+                if (currentField.length() > 0) rawFieldsList.add(currentField.toString());
                 for (String rawField : rawFieldsList) {
-                    rawField = rawField.trim();
-                    rawField = rawField.replaceAll("@\\w+(?:\\([^)]*\\))?\\s+", "");
+                    rawField = rawField.trim().replaceAll("@\\w+(?:\\([^)]*\\))?\\s+", "");
                     String[] parts = rawField.split("\\s+");
                     if (parts.length >= 2) {
                         String type = parts[parts.length - 2];
@@ -392,6 +368,28 @@ public class FluxCLI {
                     }
                 }
             }
+            return parsedFields;
+        } catch (Exception e) { return null; }
+    }
+
+    private static void generateViewModel(String sourceRecord, List<String[]> parsedFields, boolean generateProperties) {
+        try {
+            String relativePath = "src/main/java/" + sourceRecord.replace(".", "/") + ".java";
+            Path recordPath = Paths.get(relativePath);
+            if (!Files.exists(recordPath)) return;
+            String content = new String(Files.readAllBytes(recordPath), StandardCharsets.UTF_8);
+            String originalPackage = "";
+            java.util.regex.Matcher pkgMatcher = java.util.regex.Pattern.compile("package\\s+([^;]+);").matcher(content);
+            if (pkgMatcher.find()) originalPackage = pkgMatcher.group(1).trim();
+            int recordIdx = content.indexOf("record ");
+            int nameStart = recordIdx + "record ".length();
+            int parenStart = content.indexOf("(", nameStart);
+            String recordName = content.substring(nameStart, parenStart).trim();
+            if (recordName.contains("<")) recordName = recordName.substring(0, recordName.indexOf("<")).trim();
+            String modelPackage = originalPackage.replace(".entity", ".model");
+            String modelClassName = recordName + "Model";
+            StringBuilder sb = new StringBuilder();
+            sb.append("package ").append(modelPackage).append(";\n\n");
             
             // Generate imports
             sb.append("import ").append(sourceRecord).append(";\n");
@@ -510,12 +508,9 @@ public class FluxCLI {
                 updatePropertiesFiles(recordName, parsedFields);
             }
             
-            return parsedFields;
-
         } catch (Exception e) {
             System.err.println("Failed to generate ViewModel: " + e.getMessage());
             e.printStackTrace();
-            return null;
         }
     }
 
@@ -912,6 +907,257 @@ public class FluxCLI {
             System.out.println("Generated Test Page: " + outputRelativePath);
         } catch (Exception e) {
             System.err.println("Failed to generate Test Page: " + e.getMessage());
+        }
+    }
+
+
+    private static void generateRepository(String sourceRecord, List<String[]> parsedFields) {
+        try {
+            int lastDot = sourceRecord.lastIndexOf('.');
+            String originalPackage = sourceRecord.substring(0, lastDot);
+            String recordName = sourceRecord.substring(lastDot + 1);
+            String repoPackage = originalPackage.replace(".entity", ".repository");
+            String repoName = recordName + "Repository";
+            String repoImplName = recordName + "RepositoryImpl";
+
+            String idType = "String";
+            if (parsedFields != null && !parsedFields.isEmpty()) {
+                String potentialIdType = parsedFields.get(0)[0];
+                for (String[] field : parsedFields) {
+                    if (field[1].toLowerCase().equals("id")) {
+                        idType = field[0];
+                        break;
+                    }
+                }
+                if (idType.equals("String")) {
+                    idType = potentialIdType;
+                }
+            }
+
+            // Interface
+            StringBuilder sb = new StringBuilder();
+            sb.append("package ").append(repoPackage).append(";\n\n");
+            sb.append("import ").append(sourceRecord).append(";\n");
+            sb.append("import java.util.List;\n");
+            sb.append("import java.util.Optional;\n\n");
+            sb.append("public interface ").append(repoName).append(" {\n");
+            sb.append("    List<").append(recordName).append("> findAll();\n");
+            sb.append("    List<").append(recordName).append("> findAll(int page, int size);\n");
+            sb.append("    void save(").append(recordName).append(" record);\n");
+            sb.append("    void delete(").append(idType).append(" id);\n");
+            sb.append("    Optional<").append(recordName).append("> findById(").append(idType).append(" id);\n");
+            
+            if (parsedFields != null) {
+                for (String[] field : parsedFields) {
+                    String type = field[0];
+                    String name = field[1];
+                    sb.append("    List<").append(recordName).append("> findBy").append(capitalize(name)).append("(").append(type).append(" ").append(name).append(");\n");
+                }
+            }
+            sb.append("}\n");
+
+            Path outPath = Paths.get("src/main/java/" + repoPackage.replace(".", "/") + "/" + repoName + ".java");
+            Files.createDirectories(outPath.getParent());
+            Files.write(outPath, sb.toString().getBytes(StandardCharsets.UTF_8));
+            System.out.println("Generated Repository Interface: " + outPath.toString());
+
+            // Implementation
+            StringBuilder sbi = new StringBuilder();
+            sbi.append("package ").append(repoPackage).append(";\n\n");
+            sbi.append("import ").append(sourceRecord).append(";\n");
+            sbi.append("import io.jettra.scoped.ApplicationScoped;\n");
+            sbi.append("import java.util.ArrayList;\n");
+            sbi.append("import java.util.List;\n");
+            sbi.append("import java.util.Optional;\n");
+            sbi.append("import java.util.stream.Collectors;\n\n");
+            sbi.append("@ApplicationScoped\n");
+            sbi.append("public class ").append(repoImplName).append(" implements ").append(repoName).append(" {\n\n");
+            sbi.append("    private static final List<").append(recordName).append("> db = new ArrayList<>();\n\n");
+            sbi.append("    @Override\n");
+            sbi.append("    public List<").append(recordName).append("> findAll() {\n");
+            sbi.append("        return new ArrayList<>(db);\n");
+            sbi.append("    }\n\n");
+            sbi.append("    @Override\n");
+            sbi.append("    public List<").append(recordName).append("> findAll(int page, int size) {\n");
+            sbi.append("        int from = (page - 1) * size;\n");
+            sbi.append("        if (from >= db.size()) return new ArrayList<>();\n");
+            sbi.append("        int to = Math.min(from + size, db.size());\n");
+            sbi.append("        return new ArrayList<>(db.subList(from, to));\n");
+            sbi.append("    }\n\n");
+            
+            String idField = parsedFields != null && !parsedFields.isEmpty() ? parsedFields.get(0)[1] : "id";
+            for (String[] field : parsedFields) {
+                if (field[1].toLowerCase().equals("id")) {
+                    idField = field[1];
+                    break;
+                }
+            }
+
+            sbi.append("    @Override\n");
+            sbi.append("    public void save(").append(recordName).append(" record) {\n");
+            sbi.append("        delete(record.").append(idField).append("());\n");
+            sbi.append("        db.add(record);\n");
+            sbi.append("    }\n\n");
+
+            sbi.append("    @Override\n");
+            sbi.append("    public void delete(").append(idType).append(" id) {\n");
+            sbi.append("        db.removeIf(r -> r.").append(idField).append("().equals(id));\n");
+            sbi.append("    }\n\n");
+
+            sbi.append("    @Override\n");
+            sbi.append("    public Optional<").append(recordName).append("> findById(").append(idType).append(" id) {\n");
+            sbi.append("        return db.stream().filter(r -> r.").append(idField).append("().equals(id)).findFirst();\n");
+            sbi.append("    }\n");
+
+            if (parsedFields != null) {
+                for (String[] field : parsedFields) {
+                    String type = field[0];
+                    String name = field[1];
+                    sbi.append("\n    @Override\n");
+                    sbi.append("    public List<").append(recordName).append("> findBy").append(capitalize(name)).append("(").append(type).append(" ").append(name).append(") {\n");
+                    sbi.append("        return db.stream().filter(r -> r.").append(name).append("().equals(").append(name).append(")).collect(Collectors.toList());\n");
+                    sbi.append("    }\n");
+                }
+            }
+            sbi.append("}\n");
+
+            Path outImplPath = Paths.get("src/main/java/" + repoPackage.replace(".", "/") + "/" + repoImplName + ".java");
+            Files.write(outImplPath, sbi.toString().getBytes(StandardCharsets.UTF_8));
+            System.out.println("Generated Repository Implementation: " + outImplPath.toString());
+            
+        } catch (Exception e) {
+            System.err.println("Failed to generate Repository: " + e.getMessage());
+        }
+    }
+
+    private static void generateController(String sourceRecord, List<String[]> parsedFields) {
+        try {
+            int lastDot = sourceRecord.lastIndexOf('.');
+            String originalPackage = sourceRecord.substring(0, lastDot);
+            String recordName = sourceRecord.substring(lastDot + 1);
+            
+            String controllerPackage = originalPackage.replace(".entity", ".controller");
+            String controllerName = recordName + "Controller";
+            String repoPackage = originalPackage.replace(".entity", ".repository");
+            String repoName = recordName + "Repository";
+            
+            String baseUriModule = "api";
+            String[] pkgParts = originalPackage.split("\\.");
+            if (pkgParts.length > 2) {
+                baseUriModule = pkgParts[pkgParts.length - 2];
+            }
+            String endpointPath = "/plugin/" + baseUriModule + "/" + recordName.toLowerCase();
+
+            String idType = "String";
+            if (parsedFields != null && !parsedFields.isEmpty()) {
+                String potentialIdType = parsedFields.get(0)[0];
+                for (String[] field : parsedFields) {
+                    if (field[1].toLowerCase().equals("id")) {
+                        idType = field[0];
+                        break;
+                    }
+                }
+                if (idType.equals("String")) {
+                    idType = potentialIdType;
+                }
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("package ").append(controllerPackage).append(";\n\n");
+            
+            sb.append("import ").append(sourceRecord).append(";\n");
+            sb.append("import ").append(repoPackage).append(".").append(repoName).append(";\n");
+            sb.append("import io.jettra.core.inject.annotation.Inject;\n");
+            sb.append("import io.jettra.rest.annotations.Consumes;\n");
+            sb.append("import io.jettra.rest.annotations.DELETE;\n");
+            sb.append("import io.jettra.rest.annotations.GET;\n");
+            sb.append("import io.jettra.rest.annotations.POST;\n");
+            sb.append("import io.jettra.rest.annotations.PUT;\n");
+            sb.append("import io.jettra.rest.annotations.Path;\n");
+            sb.append("import io.jettra.rest.annotations.PathParam;\n");
+            sb.append("import io.jettra.rest.annotations.QueryParam;\n");
+            sb.append("import io.jettra.rest.annotations.Produces;\n");
+            sb.append("import io.jettra.rest.annotations.Secured;\n");
+            sb.append("import io.jettra.rest.annotations.accreditation.DeclareRoles;\n");
+            sb.append("import io.jettra.rest.annotations.accreditation.RolesAllowed;\n");
+            sb.append("import io.jettra.rest.core.Response;\n");
+            sb.append("import io.jettra.server.discoverer.Discovered;\n");
+            sb.append("import io.jettra.server.openapi.annotations.OpenApi;\n");
+            sb.append("import io.jettra.server.openapi.annotations.Operation;\n");
+            sb.append("import java.util.List;\n\n");
+
+            sb.append("@Secured\n");
+            sb.append("@Path(\"").append(endpointPath).append("\")\n");
+            sb.append("@DeclareRoles({\"ADMIN\", \"MANAGER\"})\n");
+            sb.append("@RolesAllowed({\"ADMIN\"})\n");
+            sb.append("@Discovered\n");
+            sb.append("@OpenApi(title = \"").append(recordName).append("\", version = \"v1.0\", description = \"API for ").append(recordName).append(" management\")\n");
+            sb.append("public class ").append(controllerName).append(" {\n\n");
+            
+            sb.append("    @Inject\n");
+            sb.append("    private ").append(repoName).append(" ").append(repoName.substring(0,1).toLowerCase()).append(repoName.substring(1)).append(";\n\n");
+
+            sb.append("    @GET\n");
+            sb.append("    @Path(\"/\")\n");
+            sb.append("    @Produces(\"application/json\")\n");
+            sb.append("    @Operation(summary = \"findAll\", description = \"Returns all records\")\n");
+            sb.append("    public List<").append(recordName).append("> findAll(@QueryParam(\"page\") Integer page, @QueryParam(\"size\") Integer size) {\n");
+            sb.append("        if (page != null && size != null) {\n");
+            sb.append("            return ").append(repoName.substring(0,1).toLowerCase()).append(repoName.substring(1)).append(".findAll(page, size);\n");
+            sb.append("        }\n");
+            sb.append("        return ").append(repoName.substring(0,1).toLowerCase()).append(repoName.substring(1)).append(".findAll();\n");
+            sb.append("    }\n\n");
+
+            sb.append("    @POST\n");
+            sb.append("    @Consumes(\"application/json\")\n");
+            sb.append("    @Produces(\"application/json\")\n");
+            sb.append("    @Operation(summary = \"save\", description = \"Saves a new ").append(recordName).append("\")\n");
+            sb.append("    public Response save(").append(recordName).append(" record) {\n");
+            sb.append("        ").append(repoName.substring(0,1).toLowerCase()).append(repoName.substring(1)).append(".save(record);\n");
+            sb.append("        return Response.ok(\"{\\\"message\\\": \\\"Saved successfully\\\"}\").build();\n");
+            sb.append("    }\n\n");
+
+            sb.append("    @PUT\n");
+            sb.append("    @Consumes(\"application/json\")\n");
+            sb.append("    @Produces(\"application/json\")\n");
+            sb.append("    @Operation(summary = \"update\", description = \"Updates an existing ").append(recordName).append("\")\n");
+            sb.append("    public Response update(").append(recordName).append(" record) {\n");
+            sb.append("        ").append(repoName.substring(0,1).toLowerCase()).append(repoName.substring(1)).append(".save(record);\n");
+            sb.append("        return Response.ok(\"{\\\"message\\\": \\\"Updated successfully\\\"}\").build();\n");
+            sb.append("    }\n\n");
+
+            sb.append("    @DELETE\n");
+            sb.append("    @Path(\"/{id}\")\n");
+            sb.append("    @Produces(\"application/json\")\n");
+            sb.append("    @Operation(summary = \"delete\", description = \"Deletes a ").append(recordName).append(" by id\")\n");
+            sb.append("    public Response delete(@PathParam(\"id\") ").append(idType).append(" id) {\n");
+            sb.append("        ").append(repoName.substring(0,1).toLowerCase()).append(repoName.substring(1)).append(".delete(id);\n");
+            sb.append("        return Response.ok(\"{\\\"message\\\": \\\"Deleted successfully\\\"}\").build();\n");
+            sb.append("    }\n");
+            
+            if (parsedFields != null) {
+                for (String[] field : parsedFields) {
+                    String type = field[0];
+                    String name = field[1];
+                    sb.append("\n    @GET\n");
+                    sb.append("    @Path(\"/").append(name.toLowerCase()).append("/{").append(name).append("}\")\n");
+                    sb.append("    @Produces(\"application/json\")\n");
+                    sb.append("    @Operation(summary = \"findBy").append(capitalize(name)).append("\", description = \"Finds records by ").append(name).append("\")\n");
+                    sb.append("    public List<").append(recordName).append("> findBy").append(capitalize(name)).append("(@PathParam(\"").append(name).append("\") ").append(type).append(" ").append(name).append(") {\n");
+                    sb.append("        return ").append(repoName.substring(0,1).toLowerCase()).append(repoName.substring(1)).append(".findBy").append(capitalize(name)).append("(").append(name).append(");\n");
+                    sb.append("    }\n");
+                }
+            }
+
+            sb.append("}\n");
+            
+            Path outPath = Paths.get("src/main/java/" + controllerPackage.replace(".", "/") + "/" + controllerName + ".java");
+            Files.createDirectories(outPath.getParent());
+            Files.write(outPath, sb.toString().getBytes(StandardCharsets.UTF_8));
+            System.out.println("Generated Controller: " + outPath.toString());
+            
+        } catch (Exception e) {
+            System.err.println("Failed to generate Controller: " + e.getMessage());
         }
     }
 }
