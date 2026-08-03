@@ -1263,12 +1263,47 @@ public class FluxCLI {
             System.out.println("Generating " + mainPackage + ".page.PersonPage.java...");
             Files.write(pagePath.resolve("PersonPage.java"), generatePersonPageClass(mainPackage).getBytes(StandardCharsets.UTF_8));
 
+            System.out.println("Generating Dockerfile...");
+            String serverPort = "9010";
+            for (String line : jettraConfig.split("\n")) {
+                if (line.startsWith("server.port=")) {
+                    serverPort = line.substring("server.port=".length()).trim();
+                    break;
+                }
+            }
+            Files.write(Paths.get("Dockerfile"), generateDockerfileContent(artifactId, version, serverPort).getBytes(StandardCharsets.UTF_8));
+
             System.out.println("\nFrontend initialization completed successfully!");
 
         } catch (Exception e) {
             System.err.println("Error initializing front-end: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private static String generateDockerfileContent(String artifactId, String version, String port) {
+        String jarName = artifactId + "-" + version + ".jar";
+        String appJarName = artifactId + ".jar";
+        return "# Empleando una imagen ligera orientada a un runtime óptimo y moderno\n" +
+               "# Usando BellSoft Liberica JRE con Alpaquita Linux para menor tamaño y mayor rendimiento\n" +
+               "FROM bellsoft/liberica-runtime-container:jre-25-stream-musl\n\n" +
+               "LABEL maintainer=\"Jettra Development Team\"\n" +
+               "LABEL description=\"Contenedor de Demostración JettraBackEnd\"\n\n" +
+               "WORKDIR /app\n\n" +
+               "# Copia el JAR compilado desde target de su entorno en Host\n" +
+               "COPY target/" + jarName + "  /app/" + appJarName + "\n\n" +
+               "# Entrenar la JVM para generar el AOT Cache (AppCDS)\n" +
+               "# Ejecutamos la app por 10 segundos para cargar las clases y luego forzamos la salida guardando el archivo .jsa\n" +
+               "RUN timeout 30s java -XX:ArchiveClassesAtExit=app.jsa -jar " + appJarName + " || true\n\n" +
+               "# Exponer el puerto por defecto (configurable via -e variables de entorno o property config)\n" +
+               "EXPOSE " + port + "\n\n" +
+               "# Documenta que el contenedor utiliza persistencia en este directorio\n" +
+               "VOLUME [\"/app/db\"]\n\n" +
+               "# Opciones de JVM para optimización de rendimiento en contenedores y habilitación de AOT Cache\n" +
+               "ENV JAVA_OPTS=\"-XX:+UseCompactObjectHeaders -XX:+UseZGC -XX:+ZGenerational -Xmx512m -XX:MaxRAMPercentage=75.0 -XX:SharedArchiveFile=app.jsa\"\n\n" +
+               "ENTRYPOINT [\"sh\", \"-c\", \"java $JAVA_OPTS -jar " + appJarName + "\"]\n\n" +
+               "# Configuracion para el Shell de JettraSecurityDB\n" +
+               "CMD []\n";
     }
 
     private static String extractXmlTag(String content, String tag) {
