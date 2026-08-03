@@ -516,16 +516,25 @@ public abstract class FluxBaseHandler implements HttpHandler {
     }
 
     private boolean checkSynonym(String pluginRole, String userRole) {
+        if (userRole == null || userRole.isEmpty()) return false;
         try {
             java.io.InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("plugin-config.json");
             if (is != null) {
                 String content = new String(is.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
-                String pRoleStr = "\"plugin-role\"\\s*:\\s*\"" + pluginRole + "\"";
-                String aRoleStr = "\"application-role\"\\s*:\\s*\"" + userRole + "\"";
+                String pRoleStr = "\"plugin-role\"\\s*:\\s*\"" + java.util.regex.Pattern.quote(pluginRole) + "\"";
+                String pSecRoleStr = "\"plugin-security-role\"\\s*:\\s*\"" + java.util.regex.Pattern.quote(pluginRole) + "\"";
+                String aRoleStr = "\"applicative-role\"\\s*:\\s*\"" + java.util.regex.Pattern.quote(userRole) + "\"";
+                String aRoleStrLegacy = "\"application-role\"\\s*:\\s*\"" + java.util.regex.Pattern.quote(userRole) + "\"";
+                String aSecRoleStr = "\"applicative-security-role\"\\s*:\\s*\"" + java.util.regex.Pattern.quote(userRole) + "\"";
+
                 String[] blocks = content.split("\\{");
                 for (String block : blocks) {
-                    if (java.util.regex.Pattern.compile(pRoleStr).matcher(block).find() &&
-                        java.util.regex.Pattern.compile(aRoleStr).matcher(block).find()) {
+                    boolean matchPlugin = java.util.regex.Pattern.compile(pRoleStr).matcher(block).find() ||
+                                          java.util.regex.Pattern.compile(pSecRoleStr).matcher(block).find();
+                    boolean matchApp = java.util.regex.Pattern.compile(aRoleStr).matcher(block).find() ||
+                                       java.util.regex.Pattern.compile(aRoleStrLegacy).matcher(block).find() ||
+                                       java.util.regex.Pattern.compile(aSecRoleStr).matcher(block).find();
+                    if (matchPlugin && matchApp) {
                         return true;
                     }
                 }
