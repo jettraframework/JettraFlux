@@ -1,8 +1,18 @@
 # JettraFlux ViewModel Generator
 
-JettraFlux incluye una potente herramienta de CLI integrada a través de `mvn-flux` que permite generar de forma autónoma clases `ViewModel` a partir de `Records` (entidades).
+JettraFlux incluye una potente herramienta de CLI integrada a través de `mvn-flux` que permite inicializar la estructura frontend de nuevos proyectos (`-initialize-front-end`) y generar de forma autónoma clases `ViewModel` a partir de `Records` (`-create-code`).
 
-## Uso de la CLI
+## Inicialización de Proyectos: `-initialize-front-end`
+
+Para inicializar un proyecto nuevo creado con Maven Archetype (tras añadir la dependencia de `JettraAppServer`), ejecuta:
+
+```bash
+./mvn-flux -initialize-front-end
+```
+
+Este comando configura `pom.xml`, genera `jettra-config.properties`, los archivos `messages*.properties`, la clase principal `App.java`, y los paquetes iniciales (`login`, `template`, `dashboard`, `entity`, `model`, `page`).
+
+## Uso de la CLI para Generación de Código (`-create-code`)
 
 Para generar un ViewModel a partir de una entidad o paquete de entidades existentes, ejecuta el siguiente comando en la terminal desde la raíz de tu proyecto:
 
