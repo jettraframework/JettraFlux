@@ -361,11 +361,13 @@ public abstract class FluxBaseHandler implements HttpHandler {
     }
 
     protected io.jettra.flux.theme.ThemeData getThemeByName(String name) {
-        if ("FlatTheme".equalsIgnoreCase(name)) return io.jettra.flux.theme.Themes.FlatTheme();
-        if ("Theme3D".equalsIgnoreCase(name)) return io.jettra.flux.theme.Themes.Theme3D();
-        if ("FuturisticTheme".equalsIgnoreCase(name)) return io.jettra.flux.theme.Themes.FuturisticTheme();
-        if ("AtlantisTheme".equalsIgnoreCase(name)) return io.jettra.flux.theme.Themes.AtlantisTheme();
-        if ("OceanTheme".equalsIgnoreCase(name)) return io.jettra.flux.theme.Themes.OceanTheme();
+        // Trigger initialization
+        try { Class.forName("io.jettra.flux.theme.Themes"); } catch (Exception ignored) {}
+        
+        io.jettra.flux.theme.ThemeData theme = io.jettra.flux.theme.ThemeRegistry.getTheme(name);
+        if (theme != null) {
+            return theme;
+        }
         return io.jettra.flux.theme.Themes.AstTheme();
     }
 

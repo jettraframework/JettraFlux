@@ -2,6 +2,15 @@ package io.jettra.flux.theme;
 
 public class Themes {
 
+    static {
+        ThemeRegistry.registerTheme("FlatTheme", FlatTheme());
+        ThemeRegistry.registerTheme("Theme3D", Theme3D());
+        ThemeRegistry.registerTheme("FuturisticTheme", FuturisticTheme());
+        ThemeRegistry.registerTheme("AstTheme", AstTheme());
+        ThemeRegistry.registerTheme("AtlantisTheme", AtlantisTheme());
+        ThemeRegistry.registerTheme("OceanTheme", OceanTheme());
+    }
+
     public static ThemeData FlatTheme() {
         return new ThemeData(
             "#2196F3", // primary

@@ -24,14 +24,18 @@ public class ThemeChanged extends Widget {
         
         sb.append("<div class=\"espresso-theme-changed\" style=\"display: inline-block;\">\n");
         
-        String[] themes = {"Ast", "FlatTheme", "Theme3D", "FuturisticTheme", "AtlantisTheme", "OceanTheme"};
+        // Trigger ThemeRegistry loading by touching Themes class if not yet loaded
+        try { Class.forName("io.jettra.flux.theme.Themes"); } catch (Exception ignored) {}
+        
+        String[] themes = io.jettra.flux.theme.ThemeRegistry.getAvailableThemeNames();
         String[] logos = {"🪐", "🟦", "🧊", "🚀", "🔱", "🌊"};
         
         String currentLogo = "🎨";
         for (int i = 0; i < themes.length; i++) {
-            if (themes[i].equals(currentTheme)) {
-                currentLogo = logos[i];
-                break;
+            String themeName = themes[i];
+            String logo = i < logos.length ? logos[i] : "🎨";
+            if (themeName.equalsIgnoreCase(currentTheme)) {
+                currentLogo = logo;
             }
         }
         
@@ -40,7 +44,8 @@ public class ThemeChanged extends Widget {
         
         WidgetLet[] items = new WidgetLet[themes.length];
         for (int i = 0; i < themes.length; i++) {
-            items[i] = WidgetLet.of(themes[i] + " " + logos[i])
+            String logo = i < logos.length ? logos[i] : "🎨";
+            items[i] = WidgetLet.of(themes[i] + " " + logo)
                     .url("javascript:changeJettraTheme('" + themes[i] + "')");
         }
         
