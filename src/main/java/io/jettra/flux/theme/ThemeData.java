@@ -129,6 +129,10 @@ public class ThemeData {
            .append("}\n")
            .append(".espresso-alert-info h1, .espresso-alert-info h2, .espresso-alert-info h3, .espresso-alert-info h4, .espresso-alert-info p, .espresso-alert-info span, .espresso-alert-info div {\n")
            .append("  color: #60a5fa !important;\n")
+           .append("}\n")
+           .append("/* JettraFlux Inputs Default Styling */\n")
+           .append(".espresso-textfield, .espresso-textarea, .espresso-select {\n")
+           .append("  padding: 12px; border: 1px solid var(--primary-color); border-radius: 4px; outline: none; background: transparent; color: var(--on-surface-color); font-size: 16px; width: 100%; box-sizing: border-box;\n")
            .append("}\n");
         if (customCss != null && !customCss.isEmpty()) {
             css.append(customCss).append("\n");
