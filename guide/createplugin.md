@@ -1,65 +1,59 @@
-# Creación de Plugins de Temas para JettraFlux
+# Creación y Gestión de Plugins en JettraFlux
 
-JettraFlux soporta la carga dinámica de temas a través de una arquitectura de plugins descentralizada. Esto significa que puedes crear un proyecto totalmente independiente, compilarlo en un `.jar`, y con tan solo añadirlo como dependencia, JettraFlux lo detectará automáticamente y expondrá tu tema en la UI de la aplicación (por ejemplo, en el menú selector de temas de `ThemeChanged`).
+En **JettraFlux**, los plugins son componentes modulares y desacoplados (como temas visuales) que pueden ser desarrollados como proyectos independientes y luego inyectados en la aplicación principal sin necesidad de modificar el código interno de JettraFlux.
 
-## 1. El Archivo Descriptor (`theme.json`)
+## 1. ¿Cómo crear un Plugin de Tema?
+Para generar la estructura base de un nuevo plugin de tema (ej. `SkyRed`), puedes utilizar la herramienta de línea de comandos `mvn-flux`.
 
-El mecanismo central que permite a JettraFlux detectar tu plugin es el archivo **`theme.json`**. Este archivo debe estar ubicado estrictamente en el directorio `src/main/resources/META-INF/theme.json` de tu proyecto.
+Ejecuta el siguiente comando en la raíz de tu Workspace:
+```bash
+./mvn-flux -generate-theme-project SkyRed -url-source https://primeui.store/templates/angular/freya
+```
 
-Al arrancar, `ThemeRegistry` escanea el *classpath* de Java buscando cualquier archivo que coincida con esa ruta.
+Esto generará automáticamente un proyecto Maven independiente llamado `SkyRed` que contendrá:
+- `pom.xml`: Configurado para compilar tu plugin en un `.jar`.
+- `src/main/resources/META-INF/theme.json`: El archivo descriptor esencial del plugin.
+- Archivos Java y recursos estáticos opcionales.
 
-### Estructura de `theme.json`
+## 2. El Archivo Descriptor `theme.json`
+El núcleo del plugin es el archivo `theme.json`. `JettraFlux` utiliza un escáner (`ThemeRegistry`) en tiempo de ejecución para detectar cualquier `.jar` agregado al proyecto final que contenga un archivo `META-INF/theme.json`.
 
-El archivo es un JSON simple con pares clave-valor que describen tu tema.
+Ejemplo de `theme.json`:
 ```json
 {
   "name": "SkyRed",
-  "primary": "#d32f2f",
-  "secondary": "#f44336",
-  "background": "#ffebee",
-  "surface": "#ffffff",
+  "primary": "#ef4444",
+  "secondary": "#dc2626",
+  "background": "#0f172a",
+  "surface": "rgba(30, 41, 59, 0.7)",
   "onPrimary": "#ffffff",
-  "onSurface": "#212121",
-  "buttonStyle": "border: none; border-radius: 4px; padding: 10px 20px; font-weight: 500; cursor: pointer; transition: background 0.3s; background-color: #d32f2f; color: #ffffff;",
-  "cardStyle": "border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 16px; background-color: #ffffff;",
-  "containerStyle": "padding: 16px; border-radius: 4px;",
-  "textStyle": "font-size: 16px; color: #212121;",
-  "customCss": "/* CSS Global para inyectar en la página */",
-  "customJs": "console.log('Tema cargado');"
+  "onSurface": "#f8fafc",
+  "buttonStyle": "border: none; border-radius: 8px; padding: 12px 24px...",
+  "cardStyle": "border-radius: 16px; backdrop-filter: blur(12px)...",
+  "containerStyle": "padding: 24px; border-radius: 12px...",
+  "textStyle": "font-family: 'Inter', sans-serif...",
+  "customCss": "body { background-color: #0f172a; }",
+  "customJs": "console.log('SkyRed Theme Loaded!');"
 }
 ```
+**Importante**: Puedes incluir todo el CSS (como animaciones complejas, efectos *Glassmorphism*, etc.) y JS necesarios dentro de las llaves `customCss` y `customJs`.
 
-> **Nota:** La propiedad `name` es obligatoria y define el identificador del tema. Las propiedades `customCss` y `customJs` te permiten inyectar código de diseño y lógica global en las páginas (por ejemplo, para modificar el `sidebar` o componentes de diseño).
+## 3. Instalación del Plugin
+1. **Compilar el Plugin**: Entra a la carpeta de tu nuevo plugin (ej. `SkyRed`) y compílalo usando Maven:
+   ```bash
+   cd SkyRed
+   mvn clean install
+   ```
+2. **Añadirlo como Dependencia**: Abre el `pom.xml` de tu proyecto final (por ejemplo, `FacturaWeb` o `JettraFluxExample`) y agrega la dependencia de tu plugin:
+   ```xml
+   <dependency>
+       <groupId>com.jettraflux.theme</groupId>
+       <artifactId>SkyRed</artifactId>
+       <version>1.0-SNAPSHOT</version>
+   </dependency>
+   ```
 
-## 2. Crear un Plugin de Tema Usando CLI
+## 4. Detección Automática
+¡Listo! Cuando inicies tu proyecto final (ej. `FacturaWeb`), **JettraFlux** detectará automáticamente tu plugin al escanear el *classpath* buscando archivos `META-INF/theme.json`. 
 
-Para facilitar el proceso, hemos incorporado un generador dentro del CLI de `JettraAppServer`. 
-Desde la raíz de un proyecto de servidor que utilice `JettraAppServer` (o directamente compilando el servidor), ejecuta el siguiente comando para generar un esqueleto de plugin de tema:
-
-```bash
-./mvn-flux -generate-theme-project NombreTema -url-source https://url-de-referencia
-```
-*(Si no tienes un archivo sh creado, puedes invocar la clase `io.jettra.server.cli.FluxCLI`)*
-
-Este comando generará un directorio `NombreTema` con la estructura Maven (`pom.xml`) y el archivo `META-INF/theme.json` pre-creado y enlazado.
-
-## 3. Integración en tu Proyecto Final
-
-Una vez generado y personalizado el tema, compila tu proyecto plugin:
-
-```bash
-cd NombreTema
-mvn clean install
-```
-
-Luego, en el proyecto final (por ejemplo, `FacturaWeb`), agrega la dependencia en el `pom.xml`:
-
-```xml
-<dependency>
-    <groupId>com.jettra.theme</groupId>
-    <artifactId>nombretema</artifactId>
-    <version>1.0.0</version>
-</dependency>
-```
-
-Al levantar tu aplicación `FacturaWeb`, JettraFlux leerá automáticamente el archivo `theme.json` de la nueva dependencia instalada y agregará el tema a las opciones, permitiendo que tu UI lo utilice.
+El tema "SkyRed" aparecerá instantáneamente en las opciones de temas disponibles del sistema para que el usuario pueda seleccionarlo y aplicarlo de inmediato.
