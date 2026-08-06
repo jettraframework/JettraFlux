@@ -39,6 +39,6 @@ public class TextField extends Widget {
     public String render(ThemeData theme) {
         String valAttr = (value != null && !value.isEmpty()) ? " value=\"" + value.replace("\"", "&quot;") + "\"" : "";
         String inputName = modifier.getAttributes().containsKey("name") ? modifier.getAttributes().remove("name") : name;
-        return "<input type=\"text\" name=\"" + inputName + "\"" + valAttr + " placeholder=\"" + placeholder + "\" " + renderCommonAttributes(theme, "espresso-textfield") + " />";
+        return "<input type=\"text\" name=\"" + inputName + "\"" + valAttr + " placeholder=\"" + placeholder + "\" " + renderCommonAttributes(theme, "espresso-textfield form-control") + " />";
     }
 }

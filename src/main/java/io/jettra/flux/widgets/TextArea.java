@@ -45,7 +45,7 @@ public class TextArea extends Widget {
     @Override
     public String render(ThemeData theme) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<textarea ").append(renderCommonAttributes(theme, "espresso-textarea"));
+        sb.append("<textarea ").append(renderCommonAttributes(theme, "espresso-textarea form-control"));
         
         if (!name.isEmpty()) {
             sb.append("name=\"").append(name).append("\" ");

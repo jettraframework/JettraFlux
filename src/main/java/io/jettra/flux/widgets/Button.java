@@ -23,11 +23,11 @@ public class Button extends Widget {
     @Override
     public String render(ThemeData theme) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<div ").append(renderCommonAttributes(theme, "espresso-button")).append(">\n");
+        sb.append("<button type=\"button\" ").append(renderCommonAttributes(theme, "espresso-button btn btn-primary", theme.buttonStyle)).append(">\n");
         for (Widget child : children) {
             sb.append(child.render(theme));
         }
-        sb.append("</div>\n");
+        sb.append("</button>\n");
         return sb.toString();
     }
 }

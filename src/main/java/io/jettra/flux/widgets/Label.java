@@ -29,7 +29,7 @@ public class Label extends Widget {
     @Override
     public String render(ThemeData theme) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<label ").append(renderCommonAttributes(theme, "espresso-label"));
+        sb.append("<label ").append(renderCommonAttributes(theme, "espresso-label form-label"));
         if (!forId.isEmpty()) {
             sb.append("for=\"").append(forId).append("\" ");
         }

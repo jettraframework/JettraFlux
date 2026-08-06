@@ -17,8 +17,7 @@ public class Card extends Widget {
     @Override
     public String render(ThemeData theme) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<div ").append(renderCommonAttributes(theme, "espresso-card"))
-          .append(" style=\"").append(theme.cardStyle).append(" ").append(modifier.getStyles()).append("\">\n");
+        sb.append("<div ").append(renderCommonAttributes(theme, "espresso-card card", theme.cardStyle)).append(">\n");
         if (child != null) {
             sb.append(child.render(theme));
         }

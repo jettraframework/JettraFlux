@@ -19,7 +19,7 @@ public class SelectOne extends Widget {
     @Override
     public String render(ThemeData theme) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<div ").append(renderCommonAttributes(theme, "espresso-selectone")).append(">\n");
+        sb.append("<div ").append(renderCommonAttributes(theme, "espresso-selectone form-select")).append(">\n");
         for (Widget child : children) {
             sb.append(child.render(theme));
         }

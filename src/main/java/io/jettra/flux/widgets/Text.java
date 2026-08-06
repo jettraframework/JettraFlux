@@ -16,6 +16,6 @@ public class Text extends Widget {
 
     @Override
     public String render(ThemeData theme) {
-        return "<span " + renderCommonAttributes(theme, "espresso-text") + " style=\"" + theme.textStyle + " " + modifier.getStyles() + "\">" + text + "</span>";
+        return "<span " + renderCommonAttributes(theme, "espresso-text", theme.textStyle) + ">" + text + "</span>";
     }
 }

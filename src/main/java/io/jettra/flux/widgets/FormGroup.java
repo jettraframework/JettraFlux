@@ -19,7 +19,7 @@ public class FormGroup extends Widget {
     @Override
     public String render(ThemeData theme) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<div ").append(renderCommonAttributes(theme, "espresso-formgroup")).append(">\n");
+        sb.append("<div ").append(renderCommonAttributes(theme, "espresso-formgroup mb-3")).append(">\n");
         for (Widget child : children) {
             sb.append(child.render(theme));
         }

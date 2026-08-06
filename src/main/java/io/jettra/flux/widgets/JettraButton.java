@@ -79,16 +79,17 @@ public class JettraButton extends Widget {
             classes.add("espresso-btn-rounded");
         }
 
+        classes.add("btn");
         String cssClass = String.join(" ", classes);
         
         StringBuilder sb = new StringBuilder();
         
         if (actionMethod != null) {
             // Render as submit button with action
-            sb.append("<button type=\"submit\" ").append(renderCommonAttributes(theme, cssClass)).append(">\n");
+            sb.append("<button type=\"submit\" ").append(renderCommonAttributes(theme, cssClass, theme.buttonStyle)).append(">\n");
         } else {
             // Render as standard button
-            sb.append("<button type=\"button\" ").append(renderCommonAttributes(theme, cssClass)).append(">\n");
+            sb.append("<button type=\"button\" ").append(renderCommonAttributes(theme, cssClass, theme.buttonStyle)).append(">\n");
         }
         
         if (icon != null && !icon.isEmpty()) {

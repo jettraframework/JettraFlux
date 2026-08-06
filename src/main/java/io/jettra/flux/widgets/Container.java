@@ -18,7 +18,7 @@ public class Container extends Widget {
     public String render(ThemeData theme) {
         StringBuilder sb = new StringBuilder();
         
-        sb.append("<div ").append(renderCommonAttributes(theme, "espresso-container")).append(" style=\"").append(theme.containerStyle).append(" ").append(modifier.getStyles()).append("\">\n");
+        sb.append("<div ").append(renderCommonAttributes(theme, "espresso-container", theme.containerStyle)).append(">\n");
         if (child != null) {
             sb.append(child.render(theme));
         }
