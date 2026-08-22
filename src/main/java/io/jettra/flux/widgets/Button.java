@@ -22,8 +22,12 @@ public class Button extends Widget {
 
     @Override
     public String render(ThemeData theme) {
+        String type = "button";
+        if (modifier.getAttributes().containsKey("type")) {
+            type = modifier.getAttributes().remove("type");
+        }
         StringBuilder sb = new StringBuilder();
-        sb.append("<button type=\"button\" ").append(renderCommonAttributes(theme, "espresso-button btn btn-primary", theme.buttonStyle)).append(">\n");
+        sb.append("<button type=\"").append(type).append("\" ").append(renderCommonAttributes(theme, "espresso-button btn btn-primary", theme.buttonStyle)).append(">\n");
         for (Widget child : children) {
             sb.append(child.render(theme));
         }
