@@ -375,12 +375,15 @@ public abstract class FluxBaseHandler implements HttpHandler {
         Map<String, String> map = new HashMap<>();
         if (query == null || query.isEmpty()) return map;
         for (String pair : query.split("&")) {
-            String[] kv = pair.split("=");
+            int eqIdx = pair.indexOf('=');
             try {
-                if (kv.length == 2) {
-                    map.put(URLDecoder.decode(kv[0], StandardCharsets.UTF_8), URLDecoder.decode(kv[1], StandardCharsets.UTF_8));
+                if (eqIdx >= 0) {
+                    map.put(URLDecoder.decode(pair.substring(0, eqIdx), StandardCharsets.UTF_8),
+                            URLDecoder.decode(pair.substring(eqIdx + 1), StandardCharsets.UTF_8));
+                } else if (!pair.isBlank()) {
+                    map.put(URLDecoder.decode(pair, StandardCharsets.UTF_8), "");
                 }
-            } catch (Exception e) {}
+            } catch (Exception ignored) {}
         }
         return map;
     }
@@ -397,10 +400,15 @@ public abstract class FluxBaseHandler implements HttpHandler {
         Map<String, String> map = new HashMap<>();
         if (formData.isEmpty()) return map;
         for (String pair : formData.split("&")) {
-            String[] kv = pair.split("=");
+            int eqIdx = pair.indexOf('=');
             try {
-                if (kv.length == 2) map.put(URLDecoder.decode(kv[0], StandardCharsets.UTF_8), URLDecoder.decode(kv[1], StandardCharsets.UTF_8));
-            } catch (Exception e) {}
+                if (eqIdx >= 0) {
+                    map.put(URLDecoder.decode(pair.substring(0, eqIdx), StandardCharsets.UTF_8),
+                            URLDecoder.decode(pair.substring(eqIdx + 1), StandardCharsets.UTF_8));
+                } else if (!pair.isBlank()) {
+                    map.put(URLDecoder.decode(pair, StandardCharsets.UTF_8), "");
+                }
+            } catch (Exception ignored) {}
         }
         return map;
     }
