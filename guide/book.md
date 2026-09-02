@@ -64,8 +64,12 @@ FluxUI supports advanced theming out of the box:
    `Themes.OceanTheme()`
 7. **MatrixTheme (Matrix):** Immersive Matrix terminal theme with phosphor neon green (#00ff41), dark abyss surface, monospace typography, glowing borders, and falling digital rain canvas.
    `Themes.MatrixTheme()` or `Themes.Matrix()`
-8. **DarkTheme (Dark):** Sleek, modern, obsidian and slate dark theme with high-contrast typography and indigo accents (#6366f1).
-   `Themes.DarkTheme()` or `Themes.Dark()`
+8. **DarkTheme:** Authentic Flowbite Dark Mode aesthetic with Gray 900 (#111827) canvas, Gray 800 (#1f2937) surfaces, and Flowbite Blue (#2563eb) actions.
+   `Themes.DarkTheme()`
+9. **HeroesTheme:** Dark marketing hero aesthetic with Flowbite Dark surfaces and Tailwind Indigo 600 accents (#4f46e5).
+   `Themes.HeroesTheme()` or `Themes.Heroes()`
+10. **SLTheme (SL):** Futuristic virtual world aesthetic inspired by Second Life with Linden Green (#84cf29), viewer floaters (#1a2233), and Linden Dollar & coordinate badges.
+   `Themes.SLTheme()` or `Themes.SL()`
 
 You can also create your own theme by instantiating `ThemeData` directly.
 

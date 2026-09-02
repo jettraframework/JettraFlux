@@ -11,8 +11,11 @@ public class Themes {
         ThemeRegistry.registerTheme("OceanTheme", OceanTheme());
         ThemeRegistry.registerTheme("Matrix", Matrix());
         ThemeRegistry.registerTheme("Retro", Retro());
-        ThemeRegistry.registerTheme("Dark", Dark());
         ThemeRegistry.registerTheme("DarkTheme", DarkTheme());
+        ThemeRegistry.registerTheme("Heroes", Heroes());
+        ThemeRegistry.registerTheme("HeroesTheme", HeroesTheme());
+        ThemeRegistry.registerTheme("SL", SL());
+        ThemeRegistry.registerTheme("SLTheme", SLTheme());
     }
 
     public static ThemeData FlatTheme() {
@@ -127,5 +130,21 @@ public class Themes {
 
     public static ThemeData Dark() {
         return DarkTheme();
+    }
+
+    public static ThemeData HeroesTheme() {
+        return HeroesTheme.create();
+    }
+
+    public static ThemeData Heroes() {
+        return HeroesTheme();
+    }
+
+    public static ThemeData SLTheme() {
+        return SLTheme.create();
+    }
+
+    public static ThemeData SL() {
+        return SLTheme();
     }
 }

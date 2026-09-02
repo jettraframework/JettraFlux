@@ -11,24 +11,21 @@ public class DarkThemeTest {
     public void testDarkThemeData() {
         ThemeData theme = DarkTheme.create();
         assertNotNull(theme);
-        assertEquals("#6366f1", theme.primaryColor);
-        assertEquals("#090d16", theme.backgroundColor);
+        assertEquals("#2563eb", theme.primaryColor);
+        assertEquals("#111827", theme.backgroundColor);
         assertEquals("#ffffff", theme.onPrimaryColor);
-        assertEquals("#f8fafc", theme.onSurfaceColor);
+        assertEquals("#f9fafb", theme.onSurfaceColor);
         assertNotNull(theme.customCss);
         assertNotNull(theme.customJs);
-        assertTrue(theme.generateGlobalCss().contains("--primary-color: #6366f1;"));
-        assertTrue(theme.generateGlobalCss().contains("--dark-bg: #090d16;"));
+        assertTrue(theme.generateGlobalCss().contains("--primary-color: #2563eb;"));
+        assertTrue(theme.generateGlobalCss().contains("--fb-gray-900: #111827;"));
     }
 
     @Test
     public void testThemesFactoryMethods() {
         ThemeData theme1 = Themes.DarkTheme();
-        ThemeData theme2 = Themes.Dark();
         assertNotNull(theme1);
-        assertNotNull(theme2);
-        assertEquals("#6366f1", theme1.primaryColor);
-        assertEquals("#6366f1", theme2.primaryColor);
+        assertEquals("#2563eb", theme1.primaryColor);
     }
 
     @Test
@@ -39,18 +36,18 @@ public class DarkThemeTest {
         ThemeData t4 = ThemeRegistry.getTheme("darktheme");
 
         assertNotNull(t1, "DarkTheme should be resolved by ThemeRegistry");
-        assertNotNull(t2, "Dark should be resolved by ThemeRegistry");
+        assertNotNull(t2, "Dark should be resolved by ThemeRegistry via suffix resolution");
         assertNotNull(t3, "dark (case-insensitive) should be resolved by ThemeRegistry");
         assertNotNull(t4, "darktheme (case-insensitive) should be resolved by ThemeRegistry");
-        assertEquals("#6366f1", t1.primaryColor);
+        assertEquals("#2563eb", t1.primaryColor);
     }
 
     @Test
     public void testThemeChangedRenderingWithDark() {
-        ThemeChanged widget = ThemeChanged.of().current("Dark");
+        ThemeChanged widget = ThemeChanged.of().current("DarkTheme");
         String html = widget.render(Themes.DarkTheme());
         assertNotNull(html);
-        assertTrue(html.contains("DarkTheme") || html.contains("Dark"));
+        assertTrue(html.contains("DarkTheme"));
         assertTrue(html.contains("changeJettraTheme"));
     }
 
@@ -83,6 +80,6 @@ public class DarkThemeTest {
         Scaffold scaffold = Scaffold.of().body(card);
         String scaffoldHtml = scaffold.render(dark);
         assertTrue(scaffoldHtml.contains("jettra-scaffold-layout"));
-        assertTrue(scaffoldHtml.contains("--primary-color: #6366f1;"));
+        assertTrue(scaffoldHtml.contains("--primary-color: #2563eb;"));
     }
 }
