@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ThemeRegistry {
-    private static final Map<String, ThemeData> themes = new HashMap<>();
+    private static final Map<String, ThemeData> themes = new java.util.LinkedHashMap<>();
 
     static {
         loadDynamicThemes();
@@ -19,7 +19,24 @@ public class ThemeRegistry {
     }
 
     public static ThemeData getTheme(String name) {
-        return themes.get(name);
+        if (name == null || name.trim().isEmpty()) {
+            return null;
+        }
+        ThemeData td = themes.get(name);
+        if (td != null) {
+            return td;
+        }
+        // Case-insensitive and alias resolution
+        for (Map.Entry<String, ThemeData> entry : themes.entrySet()) {
+            String key = entry.getKey();
+            if (key.equalsIgnoreCase(name)) {
+                return entry.getValue();
+            }
+            if (key.equalsIgnoreCase(name + "Theme") || name.equalsIgnoreCase(key + "Theme")) {
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 
     public static String[] getAvailableThemeNames() {

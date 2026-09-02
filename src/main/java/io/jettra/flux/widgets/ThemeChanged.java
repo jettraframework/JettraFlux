@@ -27,26 +27,29 @@ public class ThemeChanged extends Widget {
         // Trigger ThemeRegistry loading by touching Themes class if not yet loaded
         try { Class.forName("io.jettra.flux.theme.Themes"); } catch (Exception ignored) {}
         
-        String[] themes = io.jettra.flux.theme.ThemeRegistry.getAvailableThemeNames();
-        String[] logos = {"🪐", "🟦", "🧊", "🚀", "🔱", "🌊"};
+        String[] allThemes = io.jettra.flux.theme.ThemeRegistry.getAvailableThemeNames();
+        java.util.List<String> uniqueThemes = new java.util.ArrayList<>();
+        java.util.Set<String> seen = new java.util.HashSet<>();
         
-        String currentLogo = "🎨";
-        for (int i = 0; i < themes.length; i++) {
-            String themeName = themes[i];
-            String logo = i < logos.length ? logos[i] : "🎨";
-            if (themeName.equalsIgnoreCase(currentTheme)) {
-                currentLogo = logo;
+        for (String t : allThemes) {
+            String norm = t.toLowerCase().replace("theme", "");
+            if (!seen.contains(norm)) {
+                seen.add(norm);
+                uniqueThemes.add(t);
             }
         }
+        
+        String currentLogo = getThemeLogo(currentTheme);
         
         Widget trigger = Span.of(currentLogo)
                 .modifier(new io.jettra.flux.core.Modifier().attribute("title", currentTheme).style("cursor:pointer; font-size:1.5rem;"));
         
-        WidgetLet[] items = new WidgetLet[themes.length];
-        for (int i = 0; i < themes.length; i++) {
-            String logo = i < logos.length ? logos[i] : "🎨";
-            items[i] = WidgetLet.of(themes[i] + " " + logo)
-                    .url("javascript:changeJettraTheme('" + themes[i] + "')");
+        WidgetLet[] items = new WidgetLet[uniqueThemes.size()];
+        for (int i = 0; i < uniqueThemes.size(); i++) {
+            String themeName = uniqueThemes.get(i);
+            String logo = getThemeLogo(themeName);
+            items[i] = WidgetLet.of(themeName + " " + logo)
+                    .url("javascript:changeJettraTheme('" + themeName + "')");
         }
         
         Widget menu = ((io.jettra.flux.widgets.OverlayMenu) OverlayMenu.of(items).trigger(trigger)).alignRight();
@@ -62,5 +65,18 @@ public class ThemeChanged extends Widget {
         sb.append("</div>\n");
         
         return sb.toString();
+    }
+
+    private String getThemeLogo(String themeName) {
+        if (themeName == null) return "🎨";
+        String lower = themeName.toLowerCase();
+        if (lower.contains("retro")) return "⛏️";
+        if (lower.contains("ocean")) return "🌊";
+        if (lower.contains("atlantis")) return "🔱";
+        if (lower.contains("futuristic")) return "🚀";
+        if (lower.contains("3d")) return "🧊";
+        if (lower.contains("flat")) return "🟦";
+        if (lower.contains("ast")) return "🪐";
+        return "🎨";
     }
 }
