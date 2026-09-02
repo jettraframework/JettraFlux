@@ -192,11 +192,13 @@ public class ThemeData {
            .append("  color: var(--on-surface-color);\n")
            .append("}\n");
         if (customCss != null && !customCss.isEmpty()) {
-            css.append(customCss).append("\n");
+            String cleanCss = customCss.replaceAll("(?i)^\\s*<style[^>]*>", "").replaceAll("(?i)</style>\\s*$", "");
+            css.append(cleanCss).append("\n");
         }
         css.append("</style>\n");
         if (customJs != null && !customJs.isEmpty()) {
-            css.append("<script>\n").append(customJs).append("\n</script>\n");
+            String cleanJs = customJs.replaceAll("(?i)^\\s*<script[^>]*>", "").replaceAll("(?i)</script>\\s*$", "");
+            css.append("<script>\n").append(cleanJs).append("\n</script>\n");
         }
         return css.toString();
     }

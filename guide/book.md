@@ -64,6 +64,8 @@ FluxUI supports advanced theming out of the box:
    `Themes.OceanTheme()`
 7. **MatrixTheme (Matrix):** Immersive Matrix terminal theme with phosphor neon green (#00ff41), dark abyss surface, monospace typography, glowing borders, and falling digital rain canvas.
    `Themes.MatrixTheme()` or `Themes.Matrix()`
+8. **DarkTheme (Dark):** Sleek, modern, obsidian and slate dark theme with high-contrast typography and indigo accents (#6366f1).
+   `Themes.DarkTheme()` or `Themes.Dark()`
 
 You can also create your own theme by instantiating `ThemeData` directly.
 

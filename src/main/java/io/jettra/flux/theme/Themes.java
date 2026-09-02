@@ -11,6 +11,8 @@ public class Themes {
         ThemeRegistry.registerTheme("OceanTheme", OceanTheme());
         ThemeRegistry.registerTheme("Matrix", Matrix());
         ThemeRegistry.registerTheme("Retro", Retro());
+        ThemeRegistry.registerTheme("Dark", Dark());
+        ThemeRegistry.registerTheme("DarkTheme", DarkTheme());
     }
 
     public static ThemeData FlatTheme() {
@@ -117,5 +119,13 @@ public class Themes {
 
     public static ThemeData Retro() {
         return RetroTheme();
+    }
+
+    public static ThemeData DarkTheme() {
+        return DarkTheme.create();
+    }
+
+    public static ThemeData Dark() {
+        return DarkTheme();
     }
 }
