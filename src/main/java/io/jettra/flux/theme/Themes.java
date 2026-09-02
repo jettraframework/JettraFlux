@@ -9,8 +9,8 @@ public class Themes {
         ThemeRegistry.registerTheme("AstTheme", AstTheme());
         ThemeRegistry.registerTheme("AtlantisTheme", AtlantisTheme());
         ThemeRegistry.registerTheme("OceanTheme", OceanTheme());
-        ThemeRegistry.registerTheme("Retro", RetroTheme());
-        ThemeRegistry.registerTheme("RetroTheme", RetroTheme());
+        ThemeRegistry.registerTheme("Matrix", Matrix());
+        ThemeRegistry.registerTheme("Retro", Retro());
     }
 
     public static ThemeData FlatTheme() {
@@ -103,21 +103,16 @@ public class Themes {
         );
     }
 
+    public static ThemeData MatrixTheme() {
+        return MatrixTheme.create();
+    }
+
+    public static ThemeData Matrix() {
+        return MatrixTheme();
+    }
+
     public static ThemeData RetroTheme() {
-        return new ThemeData(
-            "#5c8e32", // primary (Minecraft Grass Green)
-            "#d49a3d", // secondary (Minecraft Gold/Wood)
-            "#242220", // background (Minecraft Bedrock / Dark Stone)
-            "#343236", // surface (Minecraft Stone GUI)
-            "#ffffff", // onPrimary (White text)
-            "#f0f0f0", // onSurface (Light text on surface)
-            "font-family: 'Pixelify Sans', 'Silkscreen', monospace; font-size: 15px; font-weight: 700; color: #ffffff; background: #706e71; border: 3px solid; border-color: #9c9a9d #3c3a3d #3c3a3d #9c9a9d; box-shadow: inset -3px -3px 0px #2a282a, inset 3px 3px 0px #b8b6b9, 2px 2px 0px #000000; text-shadow: 2px 2px 0px #222222; border-radius: 0px !important; padding: 10px 20px; cursor: pointer; text-transform: uppercase; image-rendering: pixelated;",
-            "font-family: 'Pixelify Sans', 'Silkscreen', monospace; background-color: #343236; border: 4px solid #181719; box-shadow: inset 4px 4px 0px #545158, inset -4px -4px 0px #222124, 4px 4px 0px rgba(0,0,0,0.6); border-radius: 0px !important; padding: 20px; color: #f0f0f0; image-rendering: pixelated;",
-            "padding: 16px; border-radius: 0px !important; border: 2px solid #181719; background-color: #343236;",
-            "font-size: 15px; color: #f0f0f0; font-family: 'Pixelify Sans', 'Silkscreen', 'VT323', monospace; text-shadow: 1px 1px 0px #1a1a1a;",
-            RetroTheme.GlobalCSS,
-            ""
-        );
+        return RetroTheme.create();
     }
 
     public static ThemeData Retro() {

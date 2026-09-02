@@ -2,6 +2,23 @@ package io.jettra.flux.theme;
 
 public class RetroTheme {
 
+    public static ThemeData create() {
+        return new ThemeData(
+            "#5c8e32", // primary: Minecraft Grass Green
+            "#d49a3d", // secondary: Gold
+            "#242220", // background: Stone/Dirt dark background
+            "#343236", // surface: Cobblestone/Furnace surface
+            "#ffffff", // onPrimary: White text on primary
+            "#f0f0f0", // onSurface: Light text
+            "border: 2px solid #000; border-radius: 0px; padding: 10px 20px; font-weight: bold; font-family: 'Pixelify Sans', 'Silkscreen', 'VT323', monospace; color: #ffffff; background-color: #706e71; box-shadow: inset 2px 2px 0px #9c9a9d, inset -2px -2px 0px #3c3a3d; cursor: pointer; text-transform: uppercase;",
+            "border: 4px solid #18171a; border-radius: 0px; padding: 20px; background-color: #38363c; box-shadow: inset 3px 3px 0px #5c5963, inset -3px -3px 0px #201f23; color: #f0f0f0;",
+            "padding: 16px; border-radius: 0px; border: 2px solid #18171a; background-color: #242220;",
+            "font-size: 16px; color: #f0f0f0; font-family: 'Pixelify Sans', 'Silkscreen', 'VT323', monospace; text-shadow: 1px 1px 0px #000;",
+            Template.CustomCSS,
+            Template.CustomJS
+        );
+    }
+
     public static final String FONT_IMPORT = "@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Silkscreen:wght@400;700&family=VT323&display=swap');\n";
 
     public static final String GlobalCSS = FONT_IMPORT

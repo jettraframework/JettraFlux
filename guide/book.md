@@ -56,14 +56,14 @@ FluxUI supports advanced theming out of the box:
    `Themes.Theme3D()`
 3. **FuturisticTheme:** Dark background with neon glowing borders, perfect for Cyberpunk-style dashboards.
    `Themes.FuturisticTheme()`
-4. **AstTheme:** Deep cosmic violet & turquoise theme.
+4. **AstTheme:** Deep space violet and dark turquoise aesthetic.
    `Themes.AstTheme()`
-5. **AtlantisTheme:** Clean enterprise slate and blue theme.
+5. **AtlantisTheme:** Fresh and modern corporate slate and ocean blue theme.
    `Themes.AtlantisTheme()`
-6. **OceanTheme:** Modern dark theme with mint green and cyan accents.
+6. **OceanTheme:** Mint green and dark teal aesthetic with rich sidebar and topbar layout.
    `Themes.OceanTheme()`
-7. **Retro / RetroTheme:** Iconic Minecraft aesthetic with pixelated typography, 3D stone/wood beveled buttons, crafting GUI cards, sunken inventory slots, and bedrock/grass/emerald color palette.
-   `Themes.RetroTheme()` or `Themes.Retro()`
+7. **MatrixTheme (Matrix):** Immersive Matrix terminal theme with phosphor neon green (#00ff41), dark abyss surface, monospace typography, glowing borders, and falling digital rain canvas.
+   `Themes.MatrixTheme()` or `Themes.Matrix()`
 
 You can also create your own theme by instantiating `ThemeData` directly.
 

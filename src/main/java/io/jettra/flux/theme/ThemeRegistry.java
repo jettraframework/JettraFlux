@@ -5,12 +5,16 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class ThemeRegistry {
-    private static final Map<String, ThemeData> themes = new java.util.LinkedHashMap<>();
+    private static final Map<String, ThemeData> themes = new LinkedHashMap<>();
 
     static {
+        try {
+            Class.forName("io.jettra.flux.theme.Themes");
+        } catch (Exception ignored) {}
         loadDynamicThemes();
     }
 
@@ -22,17 +26,24 @@ public class ThemeRegistry {
         if (name == null || name.trim().isEmpty()) {
             return null;
         }
-        ThemeData td = themes.get(name);
-        if (td != null) {
-            return td;
+        ThemeData direct = themes.get(name);
+        if (direct != null) {
+            return direct;
         }
-        // Case-insensitive and alias resolution
+        
+        String query = name.trim();
         for (Map.Entry<String, ThemeData> entry : themes.entrySet()) {
             String key = entry.getKey();
-            if (key.equalsIgnoreCase(name)) {
+            if (key.equalsIgnoreCase(query)) {
                 return entry.getValue();
             }
-            if (key.equalsIgnoreCase(name + "Theme") || name.equalsIgnoreCase(key + "Theme")) {
+            if (key.equalsIgnoreCase(query + "Theme") || query.equalsIgnoreCase(key + "Theme")) {
+                return entry.getValue();
+            }
+            if (key.endsWith("Theme") && key.substring(0, key.length() - 5).equalsIgnoreCase(query)) {
+                return entry.getValue();
+            }
+            if (query.endsWith("Theme") && query.substring(0, query.length() - 5).equalsIgnoreCase(key)) {
                 return entry.getValue();
             }
         }
