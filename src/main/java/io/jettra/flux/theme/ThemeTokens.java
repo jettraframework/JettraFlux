@@ -62,15 +62,26 @@ public record ThemeTokens(
         return accentPrimary;
     }
 
+    public String surfaceHover() {
+        if (surfaceBackground != null && (surfaceBackground.startsWith("#f") || surfaceBackground.equalsIgnoreCase("#ffffff"))) {
+            return "rgba(0, 0, 0, 0.05)";
+        }
+        return "rgba(255, 255, 255, 0.08)";
+    }
+
     /**
      * Formats these tokens into CSS custom properties (variables).
      */
     public String toCssVariables() {
-        return "  --surface-background: " + surfaceBackground + ";\n"
+        return "  --background: " + surfaceBackground + ";\n"
+             + "  --surface: " + cardBackground + ";\n"
+             + "  --surface-hover: " + surfaceHover() + ";\n"
+             + "  --surface-background: " + surfaceBackground + ";\n"
              + "  --card-background: " + cardBackground + ";\n"
              + "  --text-primary: " + textPrimary + ";\n"
              + "  --text-secondary: " + textSecondary + ";\n"
              + "  --border: " + border + ";\n"
+             + "  --accent: " + accentPrimary + ";\n"
              + "  --accent-primary: " + accentPrimary + ";\n"
              + "  --accent-secondary: " + accentSecondary + ";\n"
              + "  --focus-ring: " + focusRing + ";\n"

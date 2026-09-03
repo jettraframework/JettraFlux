@@ -69,6 +69,10 @@ public class ThemeModeToggle extends Widget {
         return this;
     }
 
+    public ThemeModeToggle onModeChange(Consumer<ColorMode> onModeChange) {
+        return onToggle(onModeChange);
+    }
+
     @Override
     public String render(ThemeData theme) {
         ColorMode activeMode = explicitMode != null

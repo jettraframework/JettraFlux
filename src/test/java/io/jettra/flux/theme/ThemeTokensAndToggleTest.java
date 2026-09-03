@@ -256,4 +256,46 @@ public class ThemeTokensAndToggleTest {
         assertFalse(list.contains("SLTheme"));
         assertFalse(list.contains("HeroesTheme"));
     }
+
+    @Test
+    @DisplayName("ThemeSelectDropdown renders the 12 canonical themes and excludes obsolete identifiers")
+    public void testThemeSelectDropdownRendering() {
+        io.jettra.flux.widgets.ThemeSelectDropdown dropdown = io.jettra.flux.widgets.ThemeSelectDropdown.of().current("Matrix");
+        String html = dropdown.render(Themes.Matrix());
+        assertNotNull(html);
+        assertTrue(html.contains("Matrix"));
+        assertTrue(html.contains("Core"));
+        assertTrue(html.contains("SL"));
+        assertTrue(html.contains("Heroes"));
+        assertTrue(html.contains("Theme3D"));
+        assertTrue(html.contains("FlatTheme"));
+        assertFalse(html.contains("CoreTheme"));
+        assertFalse(html.contains("SLTheme"));
+        assertFalse(html.contains("HeroesTheme"));
+
+        // Test native select option
+        dropdown.asNativeSelect(true);
+        String nativeHtml = dropdown.render(Themes.Matrix());
+        assertTrue(nativeHtml.contains("<select"));
+        assertTrue(nativeHtml.contains("<option value=\"Core\">"));
+        assertTrue(nativeHtml.contains("<option value=\"SL\">"));
+        assertTrue(nativeHtml.contains("<option value=\"Heroes\">"));
+        assertFalse(nativeHtml.contains("<option value=\"CoreTheme\">"));
+    }
+
+    @Test
+    @DisplayName("DashboardThemeControlBar composes ThemeSelectDropdown and ThemeModeToggle side by side")
+    public void testDashboardThemeControlBarComposition() {
+        io.jettra.flux.widgets.DashboardThemeControlBar bar = io.jettra.flux.widgets.DashboardThemeControlBar.of("SL", ColorMode.WHITE);
+        String html = bar.render(Themes.SL(ColorMode.WHITE));
+
+        assertNotNull(html);
+        assertTrue(html.contains("jettra-dashboard-theme-control-bar"));
+        // Contains dropdown
+        assertTrue(html.contains("SL"));
+        assertTrue(html.contains("Core"));
+        // Contains toggle in White mode (Moon icon)
+        assertTrue(html.contains("jettra-theme-icon-moon"));
+        assertTrue(html.contains("Switch to Dark Mode"));
+    }
 }

@@ -41,4 +41,10 @@ public class ThemeToggle extends ThemeModeToggle {
         super.onToggle(onToggle);
         return this;
     }
+
+    @Override
+    public ThemeToggle onModeChange(Consumer<ColorMode> onModeChange) {
+        super.onModeChange(onModeChange);
+        return this;
+    }
 }
