@@ -97,8 +97,7 @@ public class ThemeModeToggle extends Widget {
         sb.append("aria-label=\"").append(tooltip).append("\" ");
         sb.append("data-current-mode=\"").append(activeMode.name().toLowerCase()).append("\" ");
         sb.append("data-next-mode=\"").append(nextMode).append("\" ");
-        sb.append("style=\"").append(defaultStyles).append(" ").append(modifier.getStyles()).append("\" ");
-        sb.append("onclick=\"toggleJettraColorMode('").append(nextMode).append("')\">\n");
+        sb.append("onclick=\"event.stopPropagation(); if(event.preventDefault) event.preventDefault(); toggleJettraColorMode(event, '").append(nextMode).append("')\">\n");
         sb.append(iconSvg).append("\n");
         sb.append("</button>\n");
 
@@ -106,10 +105,15 @@ public class ThemeModeToggle extends Widget {
 
         sb.append("<script>\n");
         sb.append("if (typeof toggleJettraColorMode === 'undefined') {\n");
-        sb.append("  function toggleJettraColorMode(targetMode) {\n");
+        sb.append("  function toggleJettraColorMode(event, targetMode) {\n");
+        sb.append("    if (event) {\n");
+        sb.append("      if (typeof event.stopPropagation === 'function') event.stopPropagation();\n");
+        sb.append("      if (typeof event.preventDefault === 'function') event.preventDefault();\n");
+        sb.append("      event.cancelBubble = true;\n");
+        sb.append("    }\n");
         sb.append("    var current = document.documentElement.getAttribute('data-color-mode') || 'dark';\n");
         sb.append("    var mode = targetMode || (current === 'white' ? 'dark' : 'white');\n");
-        sb.append("    var currentTheme = document.documentElement.getAttribute('data-theme') || 'FlatTheme';\n");
+        sb.append("    var currentTheme = document.documentElement.getAttribute('data-theme') || 'Matrix';\n");
         sb.append("    if (typeof applyJettraStylePatch === 'function') {\n");
         sb.append("      applyJettraStylePatch(currentTheme, mode);\n");
         sb.append("    }\n");
@@ -126,8 +130,6 @@ public class ThemeModeToggle extends Widget {
         sb.append("      try { stored = localStorage.getItem('jettra_color_mode'); } catch(e) {}\n");
         sb.append("      if (stored) {\n");
         sb.append("        if (typeof applyJettraStylePatch === 'function') applyJettraStylePatch(null, stored);\n");
-        sb.append("      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {\n");
-        sb.append("        if (typeof applyJettraStylePatch === 'function') applyJettraStylePatch(null, 'white');\n");
         sb.append("      }\n");
         sb.append("    }\n");
         sb.append("  })();\n");

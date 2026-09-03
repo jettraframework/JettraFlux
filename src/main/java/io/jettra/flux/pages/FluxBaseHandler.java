@@ -35,7 +35,7 @@ public abstract class FluxBaseHandler implements HttpHandler {
                 modal.open(true);
                 
                 String themeName = getThemeCookie(exchange);
-                if (themeName == null || themeName.isEmpty()) themeName = "Ast";
+                if (themeName == null || themeName.isEmpty()) themeName = "Matrix";
                 io.jettra.flux.theme.ThemeData theme = getThemeByName(themeName);
                 
                 String html = "<!DOCTYPE html><html><head><meta charset=\"UTF-8\">"
@@ -96,7 +96,7 @@ public abstract class FluxBaseHandler implements HttpHandler {
                     );
                     modal.open(true);
                     String themeName = getThemeCookie(exchange);
-                    if (themeName == null || themeName.isEmpty()) themeName = "Ast";
+                    if (themeName == null || themeName.isEmpty()) themeName = "Matrix";
                     io.jettra.flux.theme.ThemeData theme = getThemeByName(themeName);
                     String html = "<!DOCTYPE html><html><head><meta charset=\"UTF-8\">"
                             + "<link rel=\"stylesheet\" href=\"/static/font-awesome/css/all.min.css\">\n"
@@ -200,10 +200,17 @@ public abstract class FluxBaseHandler implements HttpHandler {
         // Render UI
         String themeName = getThemeCookie(exchange);
         if (themeName == null || themeName.isEmpty()) {
-            themeName = "Ast"; // Default theme
+            themeName = "Matrix"; // Default theme
         }
         io.jettra.flux.theme.ColorMode colorMode = getColorModeCookie(exchange);
         
+        // Synchronize ThemeManager
+        io.jettra.flux.theme.ThemeManager.synchronizeFromRequest(colorMode.name().toLowerCase(), themeName);
+
+        // Ensure HTTP response preserves cookies across navigation
+        exchange.getResponseHeaders().add("Set-Cookie", "jettra_color_mode=" + colorMode.name().toLowerCase() + "; Path=/; Max-Age=31536000; SameSite=Lax");
+        exchange.getResponseHeaders().add("Set-Cookie", "jettra_theme=" + themeName + "; Path=/; Max-Age=31536000; SameSite=Lax");
+
         io.jettra.flux.theme.ThemeData theme = getThemeByName(themeName, colorMode);
         Widget ui = buildUI(exchange, params, themeName);
         if (ui != null) {
@@ -355,11 +362,15 @@ public abstract class FluxBaseHandler implements HttpHandler {
             for (String c : cookies.split(";")) {
                 c = c.trim();
                 if (c.startsWith("jettra_theme=")) {
-                    return c.substring("jettra_theme=".length());
+                    String val = c.substring("jettra_theme=".length()).trim();
+                    if (!val.isEmpty()) return val;
                 }
             }
         }
-        return null;
+        if (io.jettra.flux.theme.ThemeManager.getCurrentTheme() != null) {
+            return io.jettra.flux.theme.ThemeManager.getCurrentTheme().getDisplayName();
+        }
+        return "Matrix";
     }
 
     protected io.jettra.flux.theme.ColorMode getColorModeCookie(HttpExchange exchange) {
@@ -368,10 +379,13 @@ public abstract class FluxBaseHandler implements HttpHandler {
             for (String c : cookies.split(";")) {
                 c = c.trim();
                 if (c.startsWith("jettra_color_mode=")) {
-                    String val = c.substring("jettra_color_mode=".length());
+                    String val = c.substring("jettra_color_mode=".length()).trim();
                     return io.jettra.flux.theme.ColorMode.fromString(val, io.jettra.flux.theme.ColorMode.DARK);
                 }
             }
+        }
+        if (io.jettra.flux.theme.ThemeManager.getCurrentMode() != null) {
+            return io.jettra.flux.theme.ThemeManager.getCurrentMode();
         }
         return io.jettra.flux.theme.ColorMode.DARK;
     }

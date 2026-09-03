@@ -48,6 +48,19 @@ public final class ThemeManager {
         return jt.create(mode);
     }
 
+    public static void synchronizeFromRequest(String modeStr, String themeStr) {
+        if (themeStr != null && !themeStr.trim().isEmpty()) {
+            JettraTheme jt = JettraTheme.fromName(themeStr.trim());
+            ThemeContext.getInstance().setTheme(jt);
+        }
+        if (modeStr != null && !modeStr.trim().isEmpty()) {
+            ColorMode cm = ColorMode.fromString(modeStr.trim(), null);
+            if (cm != null) {
+                ThemeContext.getInstance().setMode(cm);
+            }
+        }
+    }
+
     public static String generateClientScript() {
         return ThemeContext.getInstance().generateClientScript();
     }

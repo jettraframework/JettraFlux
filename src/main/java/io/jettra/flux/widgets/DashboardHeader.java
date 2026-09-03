@@ -14,8 +14,8 @@ import java.util.List;
 public class DashboardHeader extends Widget {
 
     private String title = "Dashboard";
-    private String currentTheme = "FlatTheme";
-    private ColorMode colorMode;
+    private String currentTheme = "Matrix";
+    private ColorMode colorMode = ColorMode.DARK;
     private final List<Widget> rightItems = new ArrayList<>();
 
     public DashboardHeader() {

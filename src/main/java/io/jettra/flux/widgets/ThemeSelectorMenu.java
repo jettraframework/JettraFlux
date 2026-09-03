@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public class ThemeSelectorMenu extends Widget {
 
-    private String currentTheme = "FlatTheme";
+    private String currentTheme = "Matrix";
 
     private static final Map<String, String> THEME_ICONS = new LinkedHashMap<>();
 

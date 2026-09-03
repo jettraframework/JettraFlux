@@ -106,7 +106,7 @@ public enum JettraTheme implements ThemeProvider {
      */
     public static JettraTheme fromName(String name) {
         if (name == null || name.trim().isEmpty()) {
-            return DARK_THEME;
+            return MATRIX;
         }
         String clean = name.trim().toLowerCase().replaceAll("[_\\-\\s]", "");
         return switch (clean) {
@@ -122,7 +122,7 @@ public enum JettraTheme implements ThemeProvider {
             case "matrix", "matrixtheme" -> MATRIX;
             case "retro", "retrotheme" -> RETRO;
             case "dark", "darktheme" -> DARK_THEME;
-            default -> DARK_THEME;
+            default -> MATRIX;
         };
     }
 

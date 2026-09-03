@@ -15,8 +15,8 @@ import java.util.function.Consumer;
  */
 public class DashboardThemeControlBar extends Widget {
 
-    private String currentTheme = "FlatTheme";
-    private ColorMode colorMode;
+    private String currentTheme = "Matrix";
+    private ColorMode colorMode = ColorMode.DARK;
     private int toggleSize = 18;
     private boolean nativeSelect = false;
     private Consumer<ColorMode> modeListener;

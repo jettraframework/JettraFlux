@@ -5,7 +5,7 @@ import io.jettra.flux.theme.ThemeData;
 
 public class ThemeChanged extends Widget {
     
-    private String currentTheme = "Ast"; // default
+    private String currentTheme = "Matrix"; // default
 
     private ThemeChanged() {}
 

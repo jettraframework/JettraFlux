@@ -377,4 +377,23 @@ public class ThemeTokensAndToggleTest {
         assertTrue(html.contains("--jf-bg"));
         assertTrue(html.contains("jettraThemeChange"));
     }
+
+    @Test
+    @DisplayName("Default Theme is Matrix with Dark ColorMode across JettraFlux")
+    public void testDefaultThemeIsMatrixDark() {
+        assertEquals(JettraTheme.MATRIX, JettraTheme.fromName(null));
+        assertEquals(JettraTheme.MATRIX, JettraTheme.fromName(""));
+        assertEquals(JettraTheme.MATRIX, ThemeContext.getInstance().getCurrentTheme());
+        assertEquals(ColorMode.DARK, ThemeContext.getInstance().getCurrentMode());
+        assertEquals(ColorMode.DARK, JettraTheme.MATRIX.getDefaultColorMode());
+
+        io.jettra.flux.widgets.ThemeSelectDropdown dropdown = io.jettra.flux.widgets.ThemeSelectDropdown.of();
+        String dropdownHtml = dropdown.render(Themes.Matrix(ColorMode.DARK));
+        assertTrue(dropdownHtml.contains("value=\"Matrix\" selected"));
+
+        io.jettra.flux.widgets.DashboardRootContainer root = io.jettra.flux.widgets.DashboardRootContainer.of();
+        String rootHtml = root.render(Themes.Matrix(ColorMode.DARK));
+        assertTrue(rootHtml.contains("data-theme=\"Matrix\""));
+        assertTrue(rootHtml.contains("data-color-mode=\"dark\""));
+    }
 }

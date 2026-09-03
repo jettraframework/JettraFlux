@@ -16,7 +16,7 @@ import java.util.function.Consumer;
  */
 public class ThemeSelectDropdown extends Widget {
 
-    private String currentTheme = "FlatTheme";
+    private String currentTheme = "Matrix";
     private boolean nativeSelect = true;
     private Consumer<JettraTheme> themeChangeListener;
     private Consumer<String> changeListener;
@@ -143,8 +143,14 @@ public class ThemeSelectDropdown extends Widget {
         sb.append("<script>\n");
         sb.append("if (typeof changeJettraTheme === 'undefined') {\n");
         sb.append("  function changeJettraTheme(themeName) {\n");
+        sb.append("    var curMode = document.documentElement.getAttribute('data-color-mode') || 'dark';\n");
         sb.append("    document.cookie = 'jettra_theme=' + themeName + '; path=/; max-age=31536000; SameSite=Lax';\n");
+        sb.append("    document.cookie = 'jettra_color_mode=' + curMode + '; path=/; max-age=31536000; SameSite=Lax';\n");
         sb.append("    try { localStorage.setItem('jettra_theme', themeName); } catch(e) {}\n");
+        sb.append("    try { localStorage.setItem('jettra_color_mode', curMode); } catch(e) {}\n");
+        sb.append("    if (typeof applyJettraStylePatch === 'function') {\n");
+        sb.append("      applyJettraStylePatch(themeName, curMode);\n");
+        sb.append("    }\n");
         sb.append("    window.location.reload();\n");
         sb.append("  }\n");
         sb.append("}\n");

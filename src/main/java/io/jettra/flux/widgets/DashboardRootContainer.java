@@ -22,7 +22,7 @@ import java.util.List;
 public class DashboardRootContainer extends Widget {
 
     private final List<Widget> children = new ArrayList<>();
-    private String currentThemeName = "FlatTheme";
+    private String currentThemeName = "Matrix";
     private ColorMode colorMode = ColorMode.DARK;
     private boolean autoClientReconciliation = true;
 
