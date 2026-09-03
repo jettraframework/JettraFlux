@@ -7,37 +7,37 @@ import java.util.Objects;
  * Implements ThemeProvider and sealed interface contracts with pattern matching switch.
  */
 public enum JettraTheme implements ThemeProvider {
-    SL,
-    CORE,
-    HEROES,
-    FLAT_THEME,
-    THEME_3D,
-    FUTURISTIC_THEME,
-    AST_THEME,
-    ATLANTIS_THEME,
-    OCEAN_THEME,
-    MATRIX,
-    RETRO,
-    DARK_THEME;
+    FLAT_THEME("FlatTheme"),
+    THEME_3D("Theme3D"),
+    FUTURISTIC_THEME("FuturisticTheme"),
+    AST_THEME("AstTheme"),
+    ATLANTIS_THEME("AtlantisTheme"),
+    OCEAN_THEME("OceanTheme"),
+    MATRIX("Matrix"),
+    RETRO("Retro"),
+    DARK_THEME("DarkTheme"),
+    HEROES("Heroes"),
+    SL("SL"),
+    CORE("Core");
+
+    private final String displayName;
+
+    JettraTheme(String displayName) {
+        this.displayName = displayName;
+    }
+
+    /**
+     * Returns the official human-readable display name of the theme.
+     */
+    public String getDisplayName() {
+        return displayName;
+    }
 
     /**
      * Returns the canonical name of the theme in JettraFlux.
      */
     public String getThemeName() {
-        return switch (this) {
-            case SL -> "SL";
-            case CORE -> "Core";
-            case HEROES -> "Heroes";
-            case FLAT_THEME -> "FlatTheme";
-            case THEME_3D -> "Theme3D";
-            case FUTURISTIC_THEME -> "FuturisticTheme";
-            case AST_THEME -> "AstTheme";
-            case ATLANTIS_THEME -> "AtlantisTheme";
-            case OCEAN_THEME -> "OceanTheme";
-            case MATRIX -> "Matrix";
-            case RETRO -> "Retro";
-            case DARK_THEME -> "DarkTheme";
-        };
+        return displayName;
     }
 
     /**

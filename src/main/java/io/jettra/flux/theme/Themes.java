@@ -7,10 +7,7 @@ package io.jettra.flux.theme;
 public class Themes {
 
     static {
-        // Register canonical 12 themes
-        ThemeRegistry.registerTheme("SL", SL());
-        ThemeRegistry.registerTheme("Core", Core());
-        ThemeRegistry.registerTheme("Heroes", Heroes());
+        // Register the 12 canonical themes in official catalog order
         ThemeRegistry.registerTheme("FlatTheme", FlatTheme());
         ThemeRegistry.registerTheme("Theme3D", Theme3D());
         ThemeRegistry.registerTheme("FuturisticTheme", FuturisticTheme());
@@ -20,20 +17,23 @@ public class Themes {
         ThemeRegistry.registerTheme("Matrix", Matrix());
         ThemeRegistry.registerTheme("Retro", Retro());
         ThemeRegistry.registerTheme("DarkTheme", DarkTheme());
+        ThemeRegistry.registerTheme("Heroes", Heroes());
+        ThemeRegistry.registerTheme("SL", SL());
+        ThemeRegistry.registerTheme("Core", Core());
 
-        // Backward compatibility legacy aliases
-        ThemeRegistry.registerTheme("SLTheme", SLTheme());
-        ThemeRegistry.registerTheme("CoreTheme", CoreTheme());
-        ThemeRegistry.registerTheme("HeroesTheme", HeroesTheme());
-        ThemeRegistry.registerTheme("MatrixTheme", MatrixTheme());
-        ThemeRegistry.registerTheme("RetroTheme", RetroTheme());
-        ThemeRegistry.registerTheme("Dark", Dark());
-        ThemeRegistry.registerTheme("Ocean", OceanTheme());
-        ThemeRegistry.registerTheme("Flat", FlatTheme());
-        ThemeRegistry.registerTheme("3D", Theme3D());
-        ThemeRegistry.registerTheme("Futuristic", FuturisticTheme());
-        ThemeRegistry.registerTheme("Ast", AstTheme());
-        ThemeRegistry.registerTheme("Atlantis", AtlantisTheme());
+        // Backward compatibility aliases (not shown in selection menus)
+        ThemeRegistry.registerAlias("SLTheme", SLTheme());
+        ThemeRegistry.registerAlias("CoreTheme", CoreTheme());
+        ThemeRegistry.registerAlias("HeroesTheme", HeroesTheme());
+        ThemeRegistry.registerAlias("MatrixTheme", MatrixTheme());
+        ThemeRegistry.registerAlias("RetroTheme", RetroTheme());
+        ThemeRegistry.registerAlias("Dark", Dark());
+        ThemeRegistry.registerAlias("Ocean", OceanTheme());
+        ThemeRegistry.registerAlias("Flat", FlatTheme());
+        ThemeRegistry.registerAlias("3D", Theme3D());
+        ThemeRegistry.registerAlias("Futuristic", FuturisticTheme());
+        ThemeRegistry.registerAlias("Ast", AstTheme());
+        ThemeRegistry.registerAlias("Atlantis", AtlantisTheme());
     }
 
     // --- SL ---

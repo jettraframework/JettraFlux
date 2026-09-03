@@ -10,6 +10,7 @@ import java.util.Map;
 
 public class ThemeRegistry {
     private static final Map<String, ThemeData> themes = new LinkedHashMap<>();
+    private static final Map<String, ThemeData> aliases = new LinkedHashMap<>();
 
     static {
         try {
@@ -22,6 +23,10 @@ public class ThemeRegistry {
         themes.put(name, theme);
     }
 
+    public static void registerAlias(String alias, ThemeData theme) {
+        aliases.put(alias, theme);
+    }
+
     public static ThemeData getTheme(String name) {
         if (name == null || name.trim().isEmpty()) {
             return null;
@@ -29,6 +34,10 @@ public class ThemeRegistry {
         ThemeData direct = themes.get(name);
         if (direct != null) {
             return direct;
+        }
+        ThemeData aliasDirect = aliases.get(name);
+        if (aliasDirect != null) {
+            return aliasDirect;
         }
         
         String query = name.trim();
@@ -44,6 +53,11 @@ public class ThemeRegistry {
                 return entry.getValue();
             }
             if (query.endsWith("Theme") && query.substring(0, query.length() - 5).equalsIgnoreCase(key)) {
+                return entry.getValue();
+            }
+        }
+        for (Map.Entry<String, ThemeData> entry : aliases.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(query)) {
                 return entry.getValue();
             }
         }

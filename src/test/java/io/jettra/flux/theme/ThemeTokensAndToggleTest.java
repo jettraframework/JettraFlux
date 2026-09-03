@@ -156,4 +156,104 @@ public class ThemeTokensAndToggleTest {
         assertTrue(htmlWhite.contains("Switch to Dark Mode"));
         assertTrue(htmlWhite.contains("data-next-mode=\"dark\""));
     }
+
+    @Test
+    @DisplayName("ThemeModeToggle renders reactively and supports independent operation")
+    public void testThemeModeToggleDedicated() {
+        ThemeData darkTheme = Themes.Core(ColorMode.DARK);
+        ThemeData whiteTheme = Themes.Core(ColorMode.WHITE);
+
+        io.jettra.flux.widgets.ThemeModeToggle modeToggle = io.jettra.flux.widgets.ThemeModeToggle.of()
+                .size(22)
+                .colorMode(ColorMode.WHITE);
+        String html = modeToggle.render(whiteTheme);
+        assertNotNull(html);
+        assertTrue(html.contains("jettra-theme-icon-moon"));
+        assertTrue(html.contains("jettra-theme-mode-toggle"));
+
+        // Switch to dark mode
+        modeToggle.colorMode(ColorMode.DARK);
+        String htmlDark = modeToggle.render(darkTheme);
+        assertTrue(htmlDark.contains("jettra-theme-icon-sun"));
+    }
+
+    @Test
+    @DisplayName("ThemeSelectorMenu renders strictly the 12 canonical themes excluding obsolete identifiers")
+    public void testThemeSelectorMenuStrictCatalog() {
+        io.jettra.flux.widgets.ThemeSelectorMenu menu = io.jettra.flux.widgets.ThemeSelectorMenu.of().current("Core");
+        String html = menu.render(Themes.Core());
+
+        assertNotNull(html);
+        // Canonical 12 themes must be present
+        assertTrue(html.contains("FlatTheme"), "Must contain FlatTheme");
+        assertTrue(html.contains("Theme3D"), "Must contain Theme3D");
+        assertTrue(html.contains("FuturisticTheme"), "Must contain FuturisticTheme");
+        assertTrue(html.contains("AstTheme"), "Must contain AstTheme");
+        assertTrue(html.contains("AtlantisTheme"), "Must contain AtlantisTheme");
+        assertTrue(html.contains("OceanTheme"), "Must contain OceanTheme");
+        assertTrue(html.contains("Matrix"), "Must contain Matrix");
+        assertTrue(html.contains("Retro"), "Must contain Retro");
+        assertTrue(html.contains("DarkTheme"), "Must contain DarkTheme");
+        assertTrue(html.contains("Heroes"), "Must contain Heroes");
+        assertTrue(html.contains("SL"), "Must contain SL");
+        assertTrue(html.contains("Core"), "Must contain Core");
+
+        // Obsolete identifiers must NOT be present as selectable items
+        assertFalse(html.contains("CoreTheme"), "Must NOT contain CoreTheme");
+        assertFalse(html.contains("SLTheme"), "Must NOT contain SLTheme");
+        assertFalse(html.contains("HeroesTheme"), "Must NOT contain HeroesTheme");
+    }
+
+    @Test
+    @DisplayName("JettraTheme enum contains exact 12 themes with getDisplayName()")
+    public void testJettraThemeDisplayNames() {
+        assertEquals(12, JettraTheme.values().length);
+        assertEquals("FlatTheme", JettraTheme.FLAT_THEME.getDisplayName());
+        assertEquals("Theme3D", JettraTheme.THEME_3D.getDisplayName());
+        assertEquals("FuturisticTheme", JettraTheme.FUTURISTIC_THEME.getDisplayName());
+        assertEquals("AstTheme", JettraTheme.AST_THEME.getDisplayName());
+        assertEquals("AtlantisTheme", JettraTheme.ATLANTIS_THEME.getDisplayName());
+        assertEquals("OceanTheme", JettraTheme.OCEAN_THEME.getDisplayName());
+        assertEquals("Matrix", JettraTheme.MATRIX.getDisplayName());
+        assertEquals("Retro", JettraTheme.RETRO.getDisplayName());
+        assertEquals("DarkTheme", JettraTheme.DARK_THEME.getDisplayName());
+        assertEquals("Heroes", JettraTheme.HEROES.getDisplayName());
+        assertEquals("SL", JettraTheme.SL.getDisplayName());
+        assertEquals("Core", JettraTheme.CORE.getDisplayName());
+    }
+
+    @Test
+    @DisplayName("ThemeTokens provides alias getters matching semantic naming")
+    public void testThemeTokensAliasGetters() {
+        ThemeTokens tok = JettraTheme.MATRIX.tokens(ColorMode.DARK);
+        assertEquals(tok.surfaceBackground(), tok.background());
+        assertEquals(tok.cardBackground(), tok.surface());
+        assertEquals(tok.cardBackground(), tok.surfaceVariant());
+        assertEquals(tok.accentPrimary(), tok.accent());
+        assertEquals(tok.accentPrimary(), tok.brandColor());
+    }
+
+    @Test
+    @DisplayName("ThemeRegistry.getAvailableThemeNames returns exactly the 12 canonical themes")
+    public void testAvailableThemeNamesExcludesObsolete() {
+        String[] names = ThemeRegistry.getAvailableThemeNames();
+        assertEquals(12, names.length, "Available theme names must contain exactly 12 canonical themes");
+        java.util.List<String> list = java.util.Arrays.asList(names);
+        assertTrue(list.contains("FlatTheme"));
+        assertTrue(list.contains("Theme3D"));
+        assertTrue(list.contains("FuturisticTheme"));
+        assertTrue(list.contains("AstTheme"));
+        assertTrue(list.contains("AtlantisTheme"));
+        assertTrue(list.contains("OceanTheme"));
+        assertTrue(list.contains("Matrix"));
+        assertTrue(list.contains("Retro"));
+        assertTrue(list.contains("DarkTheme"));
+        assertTrue(list.contains("Heroes"));
+        assertTrue(list.contains("SL"));
+        assertTrue(list.contains("Core"));
+
+        assertFalse(list.contains("CoreTheme"));
+        assertFalse(list.contains("SLTheme"));
+        assertFalse(list.contains("HeroesTheme"));
+    }
 }

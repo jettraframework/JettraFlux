@@ -40,6 +40,29 @@ public record ThemeTokens(
     }
 
     /**
+     * Alias accessors aligning with material / semantic naming conventions.
+     */
+    public String background() {
+        return surfaceBackground;
+    }
+
+    public String surface() {
+        return cardBackground;
+    }
+
+    public String surfaceVariant() {
+        return cardBackground;
+    }
+
+    public String accent() {
+        return accentPrimary;
+    }
+
+    public String brandColor() {
+        return accentPrimary;
+    }
+
+    /**
      * Formats these tokens into CSS custom properties (variables).
      */
     public String toCssVariables() {
