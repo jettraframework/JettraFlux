@@ -1,0 +1,56 @@
+package io.jettra.flux.theme;
+
+import java.util.Objects;
+
+/**
+ * ThemeTokens provides an immutable, strongly-typed collection of semantic color tokens
+ * in compliance with WCAG AA accessibility standards (minimum 4.5:1 contrast ratio).
+ *
+ * @param surfaceBackground Canvas or main page background color
+ * @param cardBackground    Elevated surface / card / modal container color
+ * @param textPrimary       Highest contrast primary body & heading typography color
+ * @param textSecondary     Subdued secondary text / metadata color
+ * @param border            Dividers, structural outlines, and frame borders
+ * @param accentPrimary     Brand action color (primary buttons, active highlights)
+ * @param accentSecondary   Complementary brand tone or status highlight
+ * @param focusRing         Interactive accessibility focus outline
+ * @param iconColor         Symbol and iconography color
+ */
+public record ThemeTokens(
+        String surfaceBackground,
+        String cardBackground,
+        String textPrimary,
+        String textSecondary,
+        String border,
+        String accentPrimary,
+        String accentSecondary,
+        String focusRing,
+        String iconColor
+) {
+    public ThemeTokens {
+        Objects.requireNonNull(surfaceBackground, "surfaceBackground cannot be null");
+        Objects.requireNonNull(cardBackground, "cardBackground cannot be null");
+        Objects.requireNonNull(textPrimary, "textPrimary cannot be null");
+        Objects.requireNonNull(textSecondary, "textSecondary cannot be null");
+        Objects.requireNonNull(border, "border cannot be null");
+        Objects.requireNonNull(accentPrimary, "accentPrimary cannot be null");
+        Objects.requireNonNull(accentSecondary, "accentSecondary cannot be null");
+        Objects.requireNonNull(focusRing, "focusRing cannot be null");
+        Objects.requireNonNull(iconColor, "iconColor cannot be null");
+    }
+
+    /**
+     * Formats these tokens into CSS custom properties (variables).
+     */
+    public String toCssVariables() {
+        return "  --surface-background: " + surfaceBackground + ";\n"
+             + "  --card-background: " + cardBackground + ";\n"
+             + "  --text-primary: " + textPrimary + ";\n"
+             + "  --text-secondary: " + textSecondary + ";\n"
+             + "  --border: " + border + ";\n"
+             + "  --accent-primary: " + accentPrimary + ";\n"
+             + "  --accent-secondary: " + accentSecondary + ";\n"
+             + "  --focus-ring: " + focusRing + ";\n"
+             + "  --icon-color: " + iconColor + ";\n";
+    }
+}

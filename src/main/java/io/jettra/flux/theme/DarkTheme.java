@@ -12,23 +12,98 @@ package io.jettra.flux.theme;
  * - Primary Action Brand: Flowbite Blue 600 (#2563eb / hover #1d4ed8)
  * - Text: High-contrast white headers (#ffffff), body text (#e5e7eb), muted text (#9ca3af)
  */
-public class DarkTheme {
+public class DarkTheme implements ThemeDefinition {
+
+    private static final DarkTheme INSTANCE = new DarkTheme();
+
+    public static DarkTheme getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    public String getThemeName() {
+        return "DarkTheme";
+    }
+
+    @Override
+    public ThemeTokens tokens(ColorMode mode) {
+        return getTokens(mode);
+    }
+
+    public static ThemeTokens getTokens(ColorMode mode) {
+        if (mode == ColorMode.WHITE) {
+            return new ThemeTokens(
+                "#f9fafb",                  // surfaceBackground: Flowbite Gray 50
+                "#ffffff",                  // cardBackground: Pure White
+                "#111827",                  // textPrimary: Flowbite Gray 900 (WCAG contrast > 17:1)
+                "#4b5563",                  // textSecondary: Flowbite Gray 600 (WCAG contrast > 7:1)
+                "#e5e7eb",                  // border: Flowbite Gray 200
+                "#2563eb",                  // accentPrimary: Flowbite Blue 600 (WCAG contrast > 4.6:1)
+                "#1d4ed8",                  // accentSecondary: Flowbite Blue 700
+                "rgba(37, 99, 235, 0.35)",  // focusRing
+                "#111827"                   // iconColor
+            );
+        } else {
+            return new ThemeTokens(
+                "#111827",                  // surfaceBackground: Flowbite Gray 900
+                "#1f2937",                  // cardBackground: Flowbite Gray 800
+                "#f9fafb",                  // textPrimary: Crisp white-slate text (WCAG contrast > 16:1)
+                "#9ca3af",                  // textSecondary: Flowbite Gray 400 (WCAG contrast > 6.7:1)
+                "#374151",                  // border: Flowbite Gray 700
+                "#2563eb",                  // accentPrimary: Flowbite Blue 600
+                "#3b82f6",                  // accentSecondary: Flowbite Blue 500
+                "rgba(37, 99, 235, 0.5)",   // focusRing
+                "#f9fafb"                   // iconColor
+            );
+        }
+    }
 
     public static ThemeData create() {
-        return new ThemeData(
-            "#2563eb", // primary: Flowbite Blue 600
-            "#374151", // secondary: Flowbite Gray 700
-            "#111827", // background: Flowbite Gray 900
-            "#1f2937", // surface: Flowbite Gray 800
-            "#ffffff", // onPrimary: White on blue button
-            "#f9fafb", // onSurface: High contrast crisp white-slate text
-            "border: none; border-radius: 8px; padding: 10px 20px; font-weight: 500; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #ffffff; background-color: #2563eb; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); cursor: pointer; transition: background-color 0.2s ease, box-shadow 0.2s ease;", // buttonStyle
-            "border: 1px solid #374151; border-radius: 8px; padding: 24px; background-color: #1f2937; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3); color: #f9fafb;", // cardStyle
-            "padding: 20px; border-radius: 8px; border: 1px solid #374151; background-color: #1f2937;", // containerStyle
-            "font-size: 15px; color: #e5e7eb; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6;", // textStyle
-            Template.CustomCSS,
-            Template.CustomJS
-        );
+        return create(ColorMode.DARK);
+    }
+
+    @Override
+    public ThemeData createTheme(ColorMode mode) {
+        return create(mode);
+    }
+
+    public static ThemeData create(ColorMode mode) {
+        ThemeTokens tok = getTokens(mode);
+        if (mode == ColorMode.WHITE) {
+            return new ThemeData(
+                tok.accentPrimary(),
+                tok.accentSecondary(),
+                tok.surfaceBackground(),
+                tok.cardBackground(),
+                "#ffffff",
+                tok.textPrimary(),
+                "border: none; border-radius: 8px; padding: 10px 20px; font-weight: 500; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #ffffff; background-color: #2563eb; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); cursor: pointer; transition: background-color 0.2s ease, box-shadow 0.2s ease;",
+                "border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; background-color: #ffffff; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08); color: " + tok.textPrimary() + ";",
+                "padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; background-color: #f9fafb;",
+                "font-size: 15px; color: " + tok.textPrimary() + "; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6;",
+                Template.CustomCSS,
+                Template.CustomJS,
+                tok,
+                mode
+            );
+        } else {
+            return new ThemeData(
+                tok.accentPrimary(),
+                tok.accentSecondary(),
+                tok.surfaceBackground(),
+                tok.cardBackground(),
+                "#ffffff",
+                tok.textPrimary(),
+                "border: none; border-radius: 8px; padding: 10px 20px; font-weight: 500; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #ffffff; background-color: #2563eb; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); cursor: pointer; transition: background-color 0.2s ease, box-shadow 0.2s ease;",
+                "border: 1px solid #374151; border-radius: 8px; padding: 24px; background-color: #1f2937; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3); color: #f9fafb;",
+                "padding: 20px; border-radius: 8px; border: 1px solid #374151; background-color: #1f2937;",
+                "font-size: 15px; color: #e5e7eb; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6;",
+                Template.CustomCSS,
+                Template.CustomJS,
+                tok,
+                mode
+            );
+        }
     }
 
     public static class Template {

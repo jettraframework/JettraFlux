@@ -13,20 +13,15 @@ package io.jettra.flux.theme;
 public class SLTheme {
 
     public static ThemeData create() {
-        return new ThemeData(
-            "#84cf29", // primary: Second Life Linden Green
-            "#00bcd4", // secondary: Virtual Sky Cyan
-            "#0e131d", // background: Virtual Midnight Slate
-            "#1a2233", // surface: Viewer Floater Slate
-            "#0e131d", // onPrimary: Deep charcoal on green button
-            "#f1f5f9", // onSurface: Crisp white-slate text
-            "border: none; border-radius: 6px; padding: 10px 22px; font-weight: 800; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0e131d; background: linear-gradient(135deg, #84cf29 0%, #68a620 100%); box-shadow: 0 0 12px rgba(132, 207, 41, 0.35); cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s ease;", // buttonStyle
-            "border: 1px solid rgba(132, 207, 41, 0.2); border-radius: 12px; padding: 24px; background-color: #1a2233; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); color: #f1f5f9;", // cardStyle
-            "padding: 24px; border-radius: 12px; border: 1px solid rgba(0, 188, 212, 0.25); background-color: #161e2e;", // containerStyle
-            "font-size: 15px; color: #cbd5e1; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6;", // textStyle
-            Template.CustomCSS,
-            Template.CustomJS
-        );
+        return SL.create();
+    }
+
+    public static ThemeData create(ColorMode mode) {
+        return SL.create(mode);
+    }
+
+    public static ThemeTokens getTokens(ColorMode mode) {
+        return SL.getTokens(mode);
     }
 
     public static class Template {

@@ -10,20 +10,15 @@ package io.jettra.flux.theme;
 public class HeroesTheme {
 
     public static ThemeData create() {
-        return new ThemeData(
-            "#4f46e5", // primary: Tailwind Indigo 600
-            "#ff80b5", // secondary: Hero Mesh Pink
-            "#111827", // background: Flowbite Gray 900
-            "#1f2937", // surface: Flowbite Gray 800
-            "#ffffff", // onPrimary: White text on indigo button
-            "#f9fafb", // onSurface: Crisp white text
-            "border: none; border-radius: 8px; padding: 10px 20px; font-weight: 600; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #ffffff; background-color: #4f46e5; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2); cursor: pointer; transition: background-color 0.2s, box-shadow 0.2s;", // buttonStyle
-            "border: 1px solid #374151; border-radius: 12px; padding: 24px; background-color: #1f2937; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3); color: #f9fafb;", // cardStyle
-            "padding: 24px; border-radius: 12px; border: 1px solid #374151; background-color: #1f2937;", // containerStyle
-            "font-size: 15px; color: #e5e7eb; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6;", // textStyle
-            Template.CustomCSS,
-            Template.CustomJS
-        );
+        return Heroes.create();
+    }
+
+    public static ThemeData create(ColorMode mode) {
+        return Heroes.create(mode);
+    }
+
+    public static ThemeTokens getTokens(ColorMode mode) {
+        return Heroes.getTokens(mode);
     }
 
     public static class Template {

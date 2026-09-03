@@ -15,20 +15,15 @@ package io.jettra.flux.theme;
 public class CoreTheme {
 
     public static ThemeData create() {
-        return new ThemeData(
-            "#f59e0b", // primary: Jettra Core Amber Gold
-            "#38bdf8", // secondary: Java 25 Sky Blue
-            "#0b0e14", // background: Deep 3D Space Black
-            "#161f2e", // surface: Dark HUD Glass Surface
-            "#0b0e14", // onPrimary: Deep contrast dark text on gold buttons
-            "#f1f5f9", // onSurface: Crisp raywhite text
-            "border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 6px; padding: 10px 22px; font-weight: 700; font-family: 'Rajdhani', 'Share Tech Mono', sans-serif; text-transform: uppercase; letter-spacing: 0.06em; color: #0b0e14; background-color: #f59e0b; box-shadow: 0 0 12px rgba(245, 158, 11, 0.35); cursor: pointer; transition: all 0.2s ease;", // buttonStyle
-            "border: 1px solid #f59e0b; border-radius: 8px; padding: 20px; background-color: rgba(16, 22, 33, 0.92); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(245, 158, 11, 0.05); color: #f1f5f9;", // cardStyle
-            "padding: 20px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.3); background-color: rgba(14, 18, 27, 0.95);", // containerStyle
-            "font-size: 15px; color: #f1f5f9; font-family: 'Inter', 'Rajdhani', sans-serif; line-height: 1.6;", // textStyle
-            Template.CustomCSS,
-            Template.CustomJS
-        );
+        return Core.create();
+    }
+
+    public static ThemeData create(ColorMode mode) {
+        return Core.create(mode);
+    }
+
+    public static ThemeTokens getTokens(ColorMode mode) {
+        return Core.getTokens(mode);
     }
 
     public static class Template {

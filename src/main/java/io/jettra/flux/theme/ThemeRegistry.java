@@ -50,6 +50,27 @@ public class ThemeRegistry {
         return null;
     }
 
+    public static ThemeData getTheme(String name, ColorMode mode) {
+        if (mode == null) {
+            return getTheme(name);
+        }
+        JettraTheme jt = JettraTheme.fromName(name);
+        if (jt != null) {
+            return jt.create(mode);
+        }
+        return getTheme(name);
+    }
+
+    public static ThemeData getTheme(JettraTheme theme) {
+        if (theme == null) return null;
+        return theme.create();
+    }
+
+    public static ThemeData getTheme(JettraTheme theme, ColorMode mode) {
+        if (theme == null) return null;
+        return mode != null ? theme.create(mode) : theme.create();
+    }
+
     public static String[] getAvailableThemeNames() {
         return themes.keySet().toArray(new String[0]);
     }

@@ -1,22 +1,97 @@
 package io.jettra.flux.theme;
 
-public class RetroTheme {
+public class RetroTheme implements ThemeDefinition {
+
+    private static final RetroTheme INSTANCE = new RetroTheme();
+
+    public static RetroTheme getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    public String getThemeName() {
+        return "Retro";
+    }
+
+    @Override
+    public ThemeTokens tokens(ColorMode mode) {
+        return getTokens(mode);
+    }
+
+    public static ThemeTokens getTokens(ColorMode mode) {
+        if (mode == ColorMode.WHITE) {
+            return new ThemeTokens(
+                "#fef3c7",                  // surfaceBackground: warm light pixel parchment
+                "#ffffff",                  // cardBackground: pure white
+                "#451a03",                  // textPrimary: deep pixel brown (WCAG contrast > 13:1)
+                "#78350f",                  // textSecondary: warm amber (WCAG contrast > 8:1)
+                "#d97706",                  // border: pixel amber border
+                "#3f6212",                  // accentPrimary: deep retro forest green (WCAG contrast > 5:1)
+                "#b45309",                  // accentSecondary: pixel gold
+                "rgba(63, 98, 18, 0.35)",   // focusRing
+                "#3f6212"                   // iconColor
+            );
+        } else {
+            return new ThemeTokens(
+                "#242220",                  // surfaceBackground: Stone/Dirt dark background
+                "#343236",                  // cardBackground: Cobblestone/Furnace surface
+                "#f0f0f0",                  // textPrimary: Light text (WCAG contrast > 13:1)
+                "#d49a3d",                  // textSecondary: Gold (WCAG contrast > 7:1)
+                "#18171a",                  // border: dark pixel outline
+                "#5c8e32",                  // accentPrimary: Minecraft Grass Green
+                "#d49a3d",                  // accentSecondary: Gold
+                "rgba(92, 142, 50, 0.4)",   // focusRing
+                "#5c8e32"                   // iconColor
+            );
+        }
+    }
 
     public static ThemeData create() {
-        return new ThemeData(
-            "#5c8e32", // primary: Minecraft Grass Green
-            "#d49a3d", // secondary: Gold
-            "#242220", // background: Stone/Dirt dark background
-            "#343236", // surface: Cobblestone/Furnace surface
-            "#ffffff", // onPrimary: White text on primary
-            "#f0f0f0", // onSurface: Light text
-            "border: 2px solid #000; border-radius: 0px; padding: 10px 20px; font-weight: bold; font-family: 'Pixelify Sans', 'Silkscreen', 'VT323', monospace; color: #ffffff; background-color: #706e71; box-shadow: inset 2px 2px 0px #9c9a9d, inset -2px -2px 0px #3c3a3d; cursor: pointer; text-transform: uppercase;",
-            "border: 4px solid #18171a; border-radius: 0px; padding: 20px; background-color: #38363c; box-shadow: inset 3px 3px 0px #5c5963, inset -3px -3px 0px #201f23; color: #f0f0f0;",
-            "padding: 16px; border-radius: 0px; border: 2px solid #18171a; background-color: #242220;",
-            "font-size: 16px; color: #f0f0f0; font-family: 'Pixelify Sans', 'Silkscreen', 'VT323', monospace; text-shadow: 1px 1px 0px #000;",
-            Template.CustomCSS,
-            Template.CustomJS
-        );
+        return create(ColorMode.DARK);
+    }
+
+    @Override
+    public ThemeData createTheme(ColorMode mode) {
+        return create(mode);
+    }
+
+    public static ThemeData create(ColorMode mode) {
+        ThemeTokens tok = getTokens(mode);
+        if (mode == ColorMode.WHITE) {
+            return new ThemeData(
+                tok.accentPrimary(),
+                tok.accentSecondary(),
+                tok.surfaceBackground(),
+                tok.cardBackground(),
+                "#ffffff",
+                tok.textPrimary(),
+                "border: 2px solid #451a03; border-radius: 0px; padding: 10px 20px; font-weight: bold; font-family: 'Pixelify Sans', 'Silkscreen', 'VT323', monospace; color: #ffffff; background-color: #3f6212; box-shadow: 2px 2px 0px #451a03; cursor: pointer; text-transform: uppercase;",
+                "border: 3px solid #d97706; border-radius: 0px; padding: 20px; background-color: #ffffff; box-shadow: 3px 3px 0px rgba(0,0,0,0.1); color: " + tok.textPrimary() + ";",
+                "padding: 16px; border-radius: 0px; border: 2px solid #d97706; background-color: #fef3c7;",
+                "font-size: 16px; color: " + tok.textPrimary() + "; font-family: 'Pixelify Sans', 'Silkscreen', 'VT323', monospace;",
+                Template.CustomCSS,
+                Template.CustomJS,
+                tok,
+                mode
+            );
+        } else {
+            return new ThemeData(
+                tok.accentPrimary(),
+                tok.accentSecondary(),
+                tok.surfaceBackground(),
+                tok.cardBackground(),
+                "#ffffff",
+                tok.textPrimary(),
+                "border: 2px solid #000; border-radius: 0px; padding: 10px 20px; font-weight: bold; font-family: 'Pixelify Sans', 'Silkscreen', 'VT323', monospace; color: #ffffff; background-color: #706e71; box-shadow: inset 2px 2px 0px #9c9a9d, inset -2px -2px 0px #3c3a3d; cursor: pointer; text-transform: uppercase;",
+                "border: 4px solid #18171a; border-radius: 0px; padding: 20px; background-color: #38363c; box-shadow: inset 3px 3px 0px #5c5963, inset -3px -3px 0px #201f23; color: #f0f0f0;",
+                "padding: 16px; border-radius: 0px; border: 2px solid #18171a; background-color: #242220;",
+                "font-size: 16px; color: #f0f0f0; font-family: 'Pixelify Sans', 'Silkscreen', 'VT323', monospace; text-shadow: 1px 1px 0px #000;",
+                Template.CustomCSS,
+                Template.CustomJS,
+                tok,
+                mode
+            );
+        }
     }
 
     public static final String FONT_IMPORT = "@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Silkscreen:wght@400;700&family=VT323&display=swap');\n";

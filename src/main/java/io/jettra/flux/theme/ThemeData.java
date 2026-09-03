@@ -18,12 +18,15 @@ public class ThemeData {
     
     public final String customCss;
     public final String customJs;
+
+    public final ThemeTokens tokens;
+    public final ColorMode colorMode;
     
     public ThemeData(
             String primaryColor, String secondaryColor, String backgroundColor, 
             String surfaceColor, String onPrimaryColor, String onSurfaceColor,
             String buttonStyle, String cardStyle, String containerStyle, String textStyle) {
-        this(primaryColor, secondaryColor, backgroundColor, surfaceColor, onPrimaryColor, onSurfaceColor, buttonStyle, cardStyle, containerStyle, textStyle, "", "");
+        this(primaryColor, secondaryColor, backgroundColor, surfaceColor, onPrimaryColor, onSurfaceColor, buttonStyle, cardStyle, containerStyle, textStyle, "", "", null, null);
     }
 
     public ThemeData(
@@ -31,6 +34,15 @@ public class ThemeData {
             String surfaceColor, String onPrimaryColor, String onSurfaceColor,
             String buttonStyle, String cardStyle, String containerStyle, String textStyle,
             String customCss, String customJs) {
+        this(primaryColor, secondaryColor, backgroundColor, surfaceColor, onPrimaryColor, onSurfaceColor, buttonStyle, cardStyle, containerStyle, textStyle, customCss, customJs, null, null);
+    }
+
+    public ThemeData(
+            String primaryColor, String secondaryColor, String backgroundColor, 
+            String surfaceColor, String onPrimaryColor, String onSurfaceColor,
+            String buttonStyle, String cardStyle, String containerStyle, String textStyle,
+            String customCss, String customJs,
+            ThemeTokens tokens, ColorMode colorMode) {
         this.primaryColor = primaryColor;
         this.secondaryColor = secondaryColor;
         this.backgroundColor = backgroundColor;
@@ -43,6 +55,33 @@ public class ThemeData {
         this.textStyle = textStyle;
         this.customCss = customCss;
         this.customJs = customJs;
+        this.tokens = tokens != null ? tokens : new ThemeTokens(
+            backgroundColor != null ? backgroundColor : "#121212",
+            surfaceColor != null ? surfaceColor : "#1e1e1e",
+            onSurfaceColor != null ? onSurfaceColor : "#ffffff",
+            secondaryColor != null ? secondaryColor : "#94a3b8",
+            "rgba(128, 128, 128, 0.25)",
+            primaryColor != null ? primaryColor : "#2563eb",
+            secondaryColor != null ? secondaryColor : "#64748b",
+            primaryColor != null ? primaryColor : "#2563eb",
+            onSurfaceColor != null ? onSurfaceColor : "#ffffff"
+        );
+        this.colorMode = colorMode != null ? colorMode : ColorMode.DARK;
+    }
+
+    public ThemeTokens getTokens() {
+        return tokens;
+    }
+
+    public ColorMode getColorMode() {
+        return colorMode;
+    }
+
+    public ThemeData withTokens(ThemeTokens tokens, ColorMode mode) {
+        return new ThemeData(
+            primaryColor, secondaryColor, backgroundColor, surfaceColor, onPrimaryColor, onSurfaceColor,
+            buttonStyle, cardStyle, containerStyle, textStyle, customCss, customJs, tokens, mode
+        );
     }
     
     // Method to generate a base CSS for the page using this theme
@@ -57,8 +96,11 @@ public class ThemeData {
            .append("  --on-surface-color: ").append(onSurfaceColor).append(";\n")
            .append("  --text-color: ").append(onSurfaceColor).append(";\n")
            .append("  --text-color-secondary: ").append(secondaryColor).append(";\n")
-           .append("  --border-color: rgba(128, 128, 128, 0.25);\n")
-           .append("}\n")
+           .append("  --border-color: ").append(tokens != null ? tokens.border() : "rgba(128, 128, 128, 0.25)").append(";\n");
+        if (tokens != null) {
+            css.append(tokens.toCssVariables());
+        }
+        css.append("}\n")
            .append("body { background-color: var(--background-color); color: var(--on-surface-color); font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; }\n")
            .append(".jettra-icon-svg { display: inline-flex; align-items: center; justify-content: center; }\n")
            .append(".jettra-icon-svg svg { width: 100%; height: 100%; }\n")

@@ -11,23 +11,98 @@ package io.jettra.flux.theme;
  * - Glowing active/hover state with bright green border (#00ff41) and box-shadow
  * - Navigation links in <TAG/> uppercase format with white hover transitions
  */
-public class MatrixTheme {
+public class MatrixTheme implements ThemeDefinition {
+
+    private static final MatrixTheme INSTANCE = new MatrixTheme();
+
+    public static MatrixTheme getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    public String getThemeName() {
+        return "Matrix";
+    }
+
+    @Override
+    public ThemeTokens tokens(ColorMode mode) {
+        return getTokens(mode);
+    }
+
+    public static ThemeTokens getTokens(ColorMode mode) {
+        if (mode == ColorMode.WHITE) {
+            return new ThemeTokens(
+                "#f0fdf4",                  // surfaceBackground: light matrix phosphor canvas
+                "#ffffff",                  // cardBackground: pure white terminal card
+                "#0f3e1a",                  // textPrimary: deep phosphor terminal green (WCAG contrast > 11:1)
+                "#166534",                  // textSecondary: forest terminal green (WCAG contrast > 7:1)
+                "#86efac",                  // border: neon green border
+                "#15803d",                  // accentPrimary: crisp terminal green
+                "#16a34a",                  // accentSecondary: matrix phosphor green
+                "rgba(21, 128, 61, 0.4)",   // focusRing
+                "#15803d"                   // iconColor
+            );
+        } else {
+            return new ThemeTokens(
+                "#020b02",                  // surfaceBackground: Deep Matrix Abyss Black
+                "#0a120b",                  // cardBackground: Dark Matrix Terminal Surface
+                "#00ff66",                  // textPrimary: Crisp phosphor green (WCAG contrast > 15:1)
+                "#008f11",                  // textSecondary: Matrix Terminal Green (WCAG contrast > 5:1)
+                "rgba(0, 255, 65, 0.25)",   // border: Phosphor green border
+                "#00ff41",                  // accentPrimary: Electric Matrix Hacker Green
+                "#00ffcc",                  // accentSecondary: Cyan-green glow
+                "rgba(0, 255, 65, 0.4)",    // focusRing
+                "#00ff41"                   // iconColor
+            );
+        }
+    }
 
     public static ThemeData create() {
-        return new ThemeData(
-            "#00ff41", // primary: Electric Matrix Hacker Green
-            "#008f11", // secondary: Matrix Terminal Green
-            "#020b02", // background: Deep Matrix Abyss Black
-            "#0a120b", // surface: Dark Matrix Terminal Surface
-            "#000000", // onPrimary: High contrast black on electric green
-            "#00ff66", // onSurface: Crisp, legible phosphor green text
-            "border: 1px solid #00ff41; border-radius: 6px; padding: 10px 22px; font-weight: 700; font-family: 'Courier Prime', 'JetBrains Mono', 'Courier New', monospace; color: #050a05; background-color: #00ff41; box-shadow: 0 0 14px rgba(0, 255, 65, 0.4); cursor: pointer; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.25s ease;", // buttonStyle
-            "border: 1px solid rgba(0, 255, 65, 0.25); border-radius: 12px; padding: 24px; background: linear-gradient(180deg, #101912 0%, #09100a 100%); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7); color: #00ff66;", // cardStyle
-            "padding: 20px; border-radius: 12px; border: 1px solid rgba(0, 255, 65, 0.25); background-color: rgba(9, 16, 10, 0.92); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);", // containerStyle
-            "font-size: 15px; color: #00ff66; font-family: 'Courier Prime', 'JetBrains Mono', 'Courier New', monospace; line-height: 1.65; letter-spacing: 0.03em;", // textStyle
-            Template.CustomCSS,
-            Template.CustomJS
-        );
+        return create(ColorMode.DARK);
+    }
+
+    @Override
+    public ThemeData createTheme(ColorMode mode) {
+        return create(mode);
+    }
+
+    public static ThemeData create(ColorMode mode) {
+        ThemeTokens tok = getTokens(mode);
+        if (mode == ColorMode.WHITE) {
+            return new ThemeData(
+                tok.accentPrimary(),
+                tok.accentSecondary(),
+                tok.surfaceBackground(),
+                tok.cardBackground(),
+                "#ffffff",
+                tok.textPrimary(),
+                "border: 1px solid #15803d; border-radius: 6px; padding: 10px 22px; font-weight: 700; font-family: 'Courier Prime', 'JetBrains Mono', 'Courier New', monospace; color: #ffffff; background-color: #15803d; box-shadow: 0 2px 8px rgba(21, 128, 61, 0.25); cursor: pointer; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.25s ease;",
+                "border: 1px solid #86efac; border-radius: 12px; padding: 24px; background: #ffffff; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06); color: " + tok.textPrimary() + ";",
+                "padding: 20px; border-radius: 12px; border: 1px solid #86efac; background-color: #f0fdf4;",
+                "font-size: 15px; color: " + tok.textPrimary() + "; font-family: 'Courier Prime', 'JetBrains Mono', 'Courier New', monospace; line-height: 1.65; letter-spacing: 0.03em;",
+                Template.CustomCSS,
+                Template.CustomJS,
+                tok,
+                mode
+            );
+        } else {
+            return new ThemeData(
+                tok.accentPrimary(),
+                tok.accentSecondary(),
+                tok.surfaceBackground(),
+                tok.cardBackground(),
+                "#000000",
+                tok.textPrimary(),
+                "border: 1px solid #00ff41; border-radius: 6px; padding: 10px 22px; font-weight: 700; font-family: 'Courier Prime', 'JetBrains Mono', 'Courier New', monospace; color: #050a05; background-color: #00ff41; box-shadow: 0 0 14px rgba(0, 255, 65, 0.4); cursor: pointer; text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.25s ease;",
+                "border: 1px solid rgba(0, 255, 65, 0.25); border-radius: 12px; padding: 24px; background: linear-gradient(180deg, #101912 0%, #09100a 100%); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7); color: #00ff66;",
+                "padding: 20px; border-radius: 12px; border: 1px solid rgba(0, 255, 65, 0.25); background-color: rgba(9, 16, 10, 0.92); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);",
+                "font-size: 15px; color: #00ff66; font-family: 'Courier Prime', 'JetBrains Mono', 'Courier New', monospace; line-height: 1.65; letter-spacing: 0.03em;",
+                Template.CustomCSS,
+                Template.CustomJS,
+                tok,
+                mode
+            );
+        }
     }
 
     public static class Template {
