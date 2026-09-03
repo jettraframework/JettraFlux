@@ -70,10 +70,31 @@ public record ThemeTokens(
     }
 
     /**
-     * Formats these tokens into CSS custom properties (variables).
+     * Formats these tokens into CSS custom properties (variables)
+     * including --jf-* semantic tokens, --j-* studio compatibility, and standard tokens.
      */
     public String toCssVariables() {
-        return "  --background: " + surfaceBackground + ";\n"
+        return "  /* JettraFlux Semantic Variables (--jf-*) */\n"
+             + "  --jf-bg: " + surfaceBackground + ";\n"
+             + "  --jf-surface: " + cardBackground + ";\n"
+             + "  --jf-surface-hover: " + surfaceHover() + ";\n"
+             + "  --jf-text-primary: " + textPrimary + ";\n"
+             + "  --jf-text-secondary: " + textSecondary + ";\n"
+             + "  --jf-border: " + border + ";\n"
+             + "  --jf-accent: " + accentPrimary + ";\n"
+             + "  --jf-focus-ring: " + focusRing + ";\n"
+             + "  --jf-icon-color: " + iconColor + ";\n"
+             + "  /* Jettra Studio Compatibility Variables (--j-*) */\n"
+             + "  --j-bg-body: " + surfaceBackground + ";\n"
+             + "  --j-bg-surface: " + cardBackground + ";\n"
+             + "  --j-bg-subsurface: " + surfaceHover() + ";\n"
+             + "  --j-text-primary: " + textPrimary + ";\n"
+             + "  --j-text-secondary: " + textSecondary + ";\n"
+             + "  --j-text-muted: " + textSecondary + ";\n"
+             + "  --j-border: " + border + ";\n"
+             + "  --j-primary: " + accentPrimary + ";\n"
+             + "  /* Standard Semantic Variables */\n"
+             + "  --background: " + surfaceBackground + ";\n"
              + "  --surface: " + cardBackground + ";\n"
              + "  --surface-hover: " + surfaceHover() + ";\n"
              + "  --surface-background: " + surfaceBackground + ";\n"
@@ -86,5 +107,23 @@ public record ThemeTokens(
              + "  --accent-secondary: " + accentSecondary + ";\n"
              + "  --focus-ring: " + focusRing + ";\n"
              + "  --icon-color: " + iconColor + ";\n";
+    }
+
+    /**
+     * Serializes this token set as a JSON string suitable for client-side JavaScript injection.
+     */
+    public String toJson() {
+        return "{"
+            + "\"surfaceBackground\":\"" + surfaceBackground + "\","
+            + "\"cardBackground\":\"" + cardBackground + "\","
+            + "\"surfaceHover\":\"" + surfaceHover() + "\","
+            + "\"textPrimary\":\"" + textPrimary + "\","
+            + "\"textSecondary\":\"" + textSecondary + "\","
+            + "\"border\":\"" + border + "\","
+            + "\"accentPrimary\":\"" + accentPrimary + "\","
+            + "\"accentSecondary\":\"" + accentSecondary + "\","
+            + "\"focusRing\":\"" + focusRing + "\","
+            + "\"iconColor\":\"" + iconColor + "\""
+            + "}";
     }
 }

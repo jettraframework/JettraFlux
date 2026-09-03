@@ -202,15 +202,16 @@ public abstract class FluxBaseHandler implements HttpHandler {
         if (themeName == null || themeName.isEmpty()) {
             themeName = "Ast"; // Default theme
         }
+        io.jettra.flux.theme.ColorMode colorMode = getColorModeCookie(exchange);
         
-        io.jettra.flux.theme.ThemeData theme = getThemeByName(themeName);
+        io.jettra.flux.theme.ThemeData theme = getThemeByName(themeName, colorMode);
         Widget ui = buildUI(exchange, params, themeName);
         if (ui != null) {
             StringBuilder syncJs = new StringBuilder();
             injectSyncLogic(syncJs);
             injectSecurityHeartbeat(syncJs);
             
-            String html = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n" +
+            String html = "<!DOCTYPE html>\n<html lang=\"en\" data-color-mode=\"" + colorMode.name().toLowerCase() + "\" data-theme-mode=\"" + colorMode.name().toLowerCase() + "\" data-theme=\"" + themeName + "\">\n<head>\n" +
                           "<meta charset=\"UTF-8\">\n" +
                           "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
                           "<title>" + getTitle() + "</title>\n" +
@@ -218,6 +219,7 @@ public abstract class FluxBaseHandler implements HttpHandler {
                           "<link rel=\"stylesheet\" href=\"/static/bootstrap-icons/font/bootstrap-icons.css\">\n" +
                           "<link rel=\"stylesheet\" href=\"/static/material-icons/material-symbols.css\">\n" +
                           theme.generateGlobalCss() + "\n" +
+                          io.jettra.flux.theme.ThemeContext.getInstance().generateClientScript() + "\n" +
                           syncJs.toString() + "\n" +
                           "</head>\n<body style=\"margin: 0; padding: 0; box-sizing: border-box;\">\n" +
                           ui.render(theme) + "\n" +
@@ -360,15 +362,33 @@ public abstract class FluxBaseHandler implements HttpHandler {
         return null;
     }
 
+    protected io.jettra.flux.theme.ColorMode getColorModeCookie(HttpExchange exchange) {
+        String cookies = exchange.getRequestHeaders().getFirst("Cookie");
+        if (cookies != null) {
+            for (String c : cookies.split(";")) {
+                c = c.trim();
+                if (c.startsWith("jettra_color_mode=")) {
+                    String val = c.substring("jettra_color_mode=".length());
+                    return io.jettra.flux.theme.ColorMode.fromString(val, io.jettra.flux.theme.ColorMode.DARK);
+                }
+            }
+        }
+        return io.jettra.flux.theme.ColorMode.DARK;
+    }
+
     protected io.jettra.flux.theme.ThemeData getThemeByName(String name) {
+        return getThemeByName(name, io.jettra.flux.theme.ColorMode.DARK);
+    }
+
+    protected io.jettra.flux.theme.ThemeData getThemeByName(String name, io.jettra.flux.theme.ColorMode mode) {
         // Trigger initialization
         try { Class.forName("io.jettra.flux.theme.Themes"); } catch (Exception ignored) {}
         
-        io.jettra.flux.theme.ThemeData theme = io.jettra.flux.theme.ThemeRegistry.getTheme(name);
+        io.jettra.flux.theme.ThemeData theme = io.jettra.flux.theme.ThemeRegistry.getTheme(name, mode);
         if (theme != null) {
             return theme;
         }
-        return io.jettra.flux.theme.Themes.AstTheme();
+        return io.jettra.flux.theme.Themes.AstTheme(mode);
     }
 
     private Map<String, String> parseQueryParams(String query) {

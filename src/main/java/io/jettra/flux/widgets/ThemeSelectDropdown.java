@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 public class ThemeSelectDropdown extends Widget {
 
     private String currentTheme = "FlatTheme";
-    private boolean nativeSelect = false;
+    private boolean nativeSelect = true;
     private Consumer<JettraTheme> themeChangeListener;
     private Consumer<String> changeListener;
 
@@ -94,8 +94,8 @@ public class ThemeSelectDropdown extends Widget {
         if (nativeSelect) {
             sb.append("<div class=\"jettra-theme-dropdown-container\" style=\"display: inline-flex; align-items: center; position: relative;\">\n");
             sb.append("  <select id=\"").append(id).append("\" class=\"jettra-theme-select-native\" ");
-            sb.append("style=\"appearance: none; -webkit-appearance: none; background: var(--surface, var(--surface-color)); color: var(--text-primary, var(--on-surface-color)); ");
-            sb.append("border: 1px solid var(--border, rgba(128,128,128,0.25)); border-radius: 8px; padding: 7px 32px 7px 12px; font-size: 0.875rem; font-weight: 500; cursor: pointer; outline: none; transition: border-color 0.2s;\" ");
+            sb.append("style=\"appearance: none; -webkit-appearance: none; background: var(--j-bg-subsurface, var(--surface, var(--surface-color))); color: var(--j-text-primary, var(--text-primary, var(--on-surface-color))); ");
+            sb.append("border: 1px solid var(--j-border, var(--border, rgba(128,128,128,0.25))); border-radius: 6px; padding: 5px 26px 5px 10px; font-size: 11.5px; font-weight: 600; cursor: pointer; outline: none; transition: all 0.15s;\" ");
             sb.append("onchange=\"changeJettraTheme(this.value)\">\n");
 
             for (JettraTheme jt : officialThemes) {
@@ -108,7 +108,7 @@ public class ThemeSelectDropdown extends Widget {
             }
             sb.append("  </select>\n");
             // Caret icon
-            sb.append("  <span style=\"position: absolute; right: 10px; pointer-events: none; color: var(--icon-color, var(--text-secondary)); font-size: 0.75rem;\">▼</span>\n");
+            sb.append("  <span style=\"position: absolute; right: 8px; pointer-events: none; color: var(--j-text-muted, var(--icon-color, var(--text-secondary))); font-size: 0.7rem;\">▼</span>\n");
             sb.append("</div>\n");
         } else {
             // Sleek interactive overlay trigger

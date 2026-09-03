@@ -102,14 +102,17 @@ public class ThemeModeToggle extends Widget {
         sb.append(iconSvg).append("\n");
         sb.append("</button>\n");
 
+        sb.append(io.jettra.flux.theme.ThemeContext.getInstance().generateClientScript()).append("\n");
+
         sb.append("<script>\n");
         sb.append("if (typeof toggleJettraColorMode === 'undefined') {\n");
         sb.append("  function toggleJettraColorMode(targetMode) {\n");
-        sb.append("    var mode = targetMode || (document.documentElement.getAttribute('data-color-mode') === 'white' ? 'dark' : 'white');\n");
-        sb.append("    document.cookie = 'jettra_color_mode=' + mode + '; path=/; max-age=31536000; SameSite=Lax';\n");
-        sb.append("    try { localStorage.setItem('jettra_color_mode', mode); } catch(e) {}\n");
-        sb.append("    document.documentElement.setAttribute('data-color-mode', mode);\n");
-        sb.append("    window.location.reload();\n");
+        sb.append("    var current = document.documentElement.getAttribute('data-color-mode') || 'dark';\n");
+        sb.append("    var mode = targetMode || (current === 'white' ? 'dark' : 'white');\n");
+        sb.append("    var currentTheme = document.documentElement.getAttribute('data-theme') || 'FlatTheme';\n");
+        sb.append("    if (typeof applyJettraStylePatch === 'function') {\n");
+        sb.append("      applyJettraStylePatch(currentTheme, mode);\n");
+        sb.append("    }\n");
         sb.append("  }\n");
         sb.append("  (function initColorModeDetection() {\n");
         sb.append("    var cookies = document.cookie.split(';');\n");
@@ -122,11 +125,9 @@ public class ThemeModeToggle extends Widget {
         sb.append("      var stored = null;\n");
         sb.append("      try { stored = localStorage.getItem('jettra_color_mode'); } catch(e) {}\n");
         sb.append("      if (stored) {\n");
-        sb.append("        document.cookie = 'jettra_color_mode=' + stored + '; path=/; max-age=31536000; SameSite=Lax';\n");
-        sb.append("      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {\n");
-        sb.append("        document.cookie = 'jettra_color_mode=dark; path=/; max-age=31536000; SameSite=Lax';\n");
+        sb.append("        if (typeof applyJettraStylePatch === 'function') applyJettraStylePatch(null, stored);\n");
         sb.append("      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {\n");
-        sb.append("        document.cookie = 'jettra_color_mode=white; path=/; max-age=31536000; SameSite=Lax';\n");
+        sb.append("        if (typeof applyJettraStylePatch === 'function') applyJettraStylePatch(null, 'white');\n");
         sb.append("      }\n");
         sb.append("    }\n");
         sb.append("  })();\n");

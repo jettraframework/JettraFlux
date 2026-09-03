@@ -298,4 +298,83 @@ public class ThemeTokensAndToggleTest {
         assertTrue(html.contains("jettra-theme-icon-moon"));
         assertTrue(html.contains("Switch to Dark Mode"));
     }
+
+    @Test
+    @DisplayName("ThemeContext manages reactive state and notifies observers on mutation")
+    public void testThemeContextReactiveObserver() {
+        ThemeContext ctx = ThemeContext.getInstance();
+        assertNotNull(ctx);
+
+        final boolean[] notified = new boolean[]{false};
+        ThemeContext.ThemeChangeListener listener = (t, m, tok) -> {
+            notified[0] = true;
+            assertNotNull(t);
+            assertNotNull(m);
+            assertNotNull(tok);
+        };
+
+        ctx.addListener(listener);
+        try {
+            ctx.set(JettraTheme.MATRIX, ColorMode.DARK);
+            assertTrue(notified[0], "Observer must be notified upon theme/mode change");
+            assertEquals(JettraTheme.MATRIX, ctx.getCurrentTheme());
+            assertEquals(ColorMode.DARK, ctx.getCurrentMode());
+            assertEquals("#020b02", ctx.getCurrentTokens().surfaceBackground());
+
+            notified[0] = false;
+            ColorMode newMode = ctx.toggleMode();
+            assertEquals(ColorMode.WHITE, newMode);
+            assertTrue(notified[0], "Observer must be notified upon toggleMode");
+            assertEquals("#f0fdf4", ctx.getCurrentTokens().surfaceBackground());
+        } finally {
+            ctx.removeListener(listener);
+        }
+    }
+
+    @Test
+    @DisplayName("ThemeTokens formats --jf-* semantic variables and JSON serialization")
+    public void testThemeTokensSemanticVariablesAndJson() {
+        ThemeTokens tok = JettraTheme.CORE.tokens(ColorMode.WHITE);
+        String css = tok.toCssVariables();
+        assertTrue(css.contains("--jf-bg:"));
+        assertTrue(css.contains("--jf-surface:"));
+        assertTrue(css.contains("--jf-text-primary:"));
+        assertTrue(css.contains("--jf-border:"));
+        assertTrue(css.contains("--jf-accent:"));
+        assertTrue(css.contains("--j-bg-body:"));
+
+        String json = tok.toJson();
+        assertTrue(json.contains("\"surfaceBackground\":"));
+        assertTrue(json.contains("\"textPrimary\":"));
+        assertTrue(json.contains("\"accentPrimary\":"));
+    }
+
+    @Test
+    @DisplayName("ThemeModeToggle generates client script and applyJettraStylePatch hook")
+    public void testThemeModeToggleEmitsDynamicPatch() {
+        io.jettra.flux.widgets.ThemeModeToggle toggle = io.jettra.flux.widgets.ThemeModeToggle.of().colorMode(ColorMode.DARK);
+        String html = toggle.render(Themes.FlatTheme(ColorMode.DARK));
+
+        assertTrue(html.contains("applyJettraStylePatch"));
+        assertTrue(html.contains("window.__jettraThemeCatalog"));
+        assertTrue(html.contains("--jf-bg"));
+        assertTrue(html.contains("--jf-text-primary"));
+        assertTrue(html.contains("toggleJettraColorMode"));
+    }
+
+    @Test
+    @DisplayName("DashboardRootContainer binds semantic tokens and embeds reactive client listener")
+    public void testDashboardRootContainerReconciliation() {
+        io.jettra.flux.widgets.DashboardRootContainer root = io.jettra.flux.widgets.DashboardRootContainer.of(
+            io.jettra.flux.widgets.Text.of("Welcome Dashboard")
+        ).currentTheme("Matrix").colorMode(ColorMode.DARK);
+
+        String html = root.render(Themes.Matrix(ColorMode.DARK));
+        assertNotNull(html);
+        assertTrue(html.contains("class=\"jettra-dashboard-root\""));
+        assertTrue(html.contains("data-theme=\"Matrix\""));
+        assertTrue(html.contains("data-color-mode=\"dark\""));
+        assertTrue(html.contains("--jf-bg"));
+        assertTrue(html.contains("jettraThemeChange"));
+    }
 }
