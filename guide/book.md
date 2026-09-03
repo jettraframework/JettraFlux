@@ -70,6 +70,8 @@ FluxUI supports advanced theming out of the box:
    `Themes.HeroesTheme()` or `Themes.Heroes()`
 10. **SLTheme (SL):** Futuristic virtual world aesthetic inspired by Second Life with Linden Green (#84cf29), viewer floaters (#1a2233), and Linden Dollar & coordinate badges.
    `Themes.SLTheme()` or `Themes.SL()`
+11. **CoreTheme (Core):** Authentic sci-fi HUD and 3D simulation aesthetic modeled after Jettra 3D Core with Amber Gold (#f59e0b), Java 25 Sky Blue (#38bdf8), 3D grid space canvas (#0b0e14), translucent dark HUD panels, and command action buttons.
+   `Themes.CoreTheme()` or `Themes.Core()`
 
 You can also create your own theme by instantiating `ThemeData` directly.
 

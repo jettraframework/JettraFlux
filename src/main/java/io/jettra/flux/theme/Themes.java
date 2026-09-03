@@ -16,6 +16,8 @@ public class Themes {
         ThemeRegistry.registerTheme("HeroesTheme", HeroesTheme());
         ThemeRegistry.registerTheme("SL", SL());
         ThemeRegistry.registerTheme("SLTheme", SLTheme());
+        ThemeRegistry.registerTheme("Core", Core());
+        ThemeRegistry.registerTheme("CoreTheme", CoreTheme());
     }
 
     public static ThemeData FlatTheme() {
@@ -146,5 +148,13 @@ public class Themes {
 
     public static ThemeData SL() {
         return SLTheme();
+    }
+
+    public static ThemeData CoreTheme() {
+        return CoreTheme.create();
+    }
+
+    public static ThemeData Core() {
+        return CoreTheme();
     }
 }

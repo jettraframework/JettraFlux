@@ -52,6 +52,8 @@ public class ThemeChanged extends Widget {
         themeIcons.put("heroes", "⚡");
         themeIcons.put("sltheme", "🌐");
         themeIcons.put("sl", "🌐");
+        themeIcons.put("coretheme", "⚛️");
+        themeIcons.put("core", "⚛️");
         
         String currentLogo = "🎨";
         if (currentTheme != null) {
