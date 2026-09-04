@@ -32,6 +32,22 @@ public class JSBuilder {
         return this;
     }
 
+    public static String escapeJs(String text) {
+        return FluxEscapers.escapeJs(text);
+    }
+
+    public static String quote(String text) {
+        return FluxEscapers.quoteJs(text);
+    }
+
+    public static String escapeHtml(String text) {
+        return FluxEscapers.escapeHtml(text);
+    }
+
+    public static String escapeAttr(String text) {
+        return FluxEscapers.escapeAttr(text);
+    }
+
     public String build() {
         StringBuilder sb = new StringBuilder();
         sb.append("<script>\n");
