@@ -64,7 +64,7 @@ public class FluidContainer extends Widget {
         StringBuilder sb = new StringBuilder();
         sb.append("<div id=\"").append(id).append("\" ")
           .append("class=\"jettra-fluid-container ").append(modifier != null ? modifier.getClasses() : "").append("\" ")
-          .append("style=\"display:flex; flex-direction:column; width:100%; min-width:100%; flex:1; box-sizing:border-box; ")
+          .append("style=\"display:flex; flex-direction:column; width:100%; min-width:100%; max-width:100%; flex:1; box-sizing:border-box; ")
           .append("padding:").append(padding).append("; ")
           .append(modifier != null ? modifier.getStyles() : "")
           .append("\">\n");
