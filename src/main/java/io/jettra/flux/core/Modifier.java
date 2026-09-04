@@ -34,6 +34,11 @@ public class Modifier {
         return this;
     }
 
+    public Modifier padding(int vertical, int horizontal) {
+        styles.put("padding", vertical + "px " + horizontal + "px");
+        return this;
+    }
+
     public Modifier margin(int all) {
         styles.put("margin", all + "px");
         return this;
@@ -51,6 +56,28 @@ public class Modifier {
     
     public Modifier fillMaxWidth() {
         styles.put("width", "100%");
+        return this;
+    }
+
+    public Modifier fullWidth() {
+        styles.put("width", "100%");
+        styles.put("min-width", "100%");
+        styles.put("box-sizing", "border-box");
+        return this;
+    }
+
+    public Modifier flex1() {
+        styles.put("flex", "1");
+        return this;
+    }
+
+    public Modifier flexGrow(int grow) {
+        styles.put("flex-grow", String.valueOf(grow));
+        return this;
+    }
+
+    public Modifier boxSizingBorderBox() {
+        styles.put("box-sizing", "border-box");
         return this;
     }
     
