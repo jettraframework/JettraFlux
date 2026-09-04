@@ -52,6 +52,17 @@ public class DashboardHeader extends Widget {
         return this;
     }
 
+    private boolean sticky = true;
+
+    public DashboardHeader sticky(boolean sticky) {
+        this.sticky = sticky;
+        return this;
+    }
+
+    public boolean isSticky() {
+        return sticky;
+    }
+
     @Override
     public String render(ThemeData theme) {
         // Build the adjacent theme control bar
@@ -60,14 +71,16 @@ public class DashboardHeader extends Widget {
         List<Widget> rightSectionChildren = new ArrayList<>(rightItems);
         rightSectionChildren.add(controlBar);
 
+        String stickyStyle = sticky ? "position: sticky; top: 0; z-index: 50; flex-shrink: 0; " : "flex-shrink: 0; ";
+
         Widget headerWidget = Top.of(
             Row.of(
-                Header.of(4, title).modifier(new Modifier().style("margin: 0; font-weight: 700; color: var(--text-primary, var(--on-surface-color));"))
+                Header.of(4, title).modifier(new Modifier().style("margin: 0; font-weight: 700; color: var(--jf-text-primary, var(--text-primary, var(--on-surface-color)));"))
             ).modifier(new Modifier().style("align-items: center; gap: 12px;")),
             Row.of(
                 rightSectionChildren.toArray(new Widget[0])
             ).modifier(new Modifier().style("align-items: center; gap: 14px;"))
-        ).modifier(new Modifier().style("justify-content: space-between; width: 100%; border-bottom: 1px solid var(--border, rgba(128,128,128,0.2)); padding: 0 1.5rem;"));
+        ).modifier(new Modifier().style(stickyStyle + "justify-content: space-between; width: 100%; background: var(--jf-surface, var(--surface, #111827)); border-bottom: 1px solid var(--jf-border, var(--border, rgba(128,128,128,0.2))); padding: 0.75rem 1.5rem; box-sizing: border-box; " + (modifier != null ? modifier.getStyles() : "")));
 
         return headerWidget.render(theme);
     }
