@@ -7,111 +7,54 @@ import io.jettra.flux.theme.ThemeData;
 import io.jettra.server.JettraServer;
 import io.jettra.server.core.JettraContext;
 
+import io.jettra.flux.security.PageSecurityGuard;
+import io.jettra.flux.security.SecurityContext;
+import io.jettra.flux.security.SecurityContextHolder;
+import io.jettra.flux.security.SecurityDecision;
+import io.jettra.flux.security.SecurityPrincipal;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public abstract class FluxBaseHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        
-        // --- Security Filter ---
-        boolean isNoLogin = this.getClass().isAnnotationPresent(io.jettra.core.login.NoLoginRequired.class);
-        
-        if (!isNoLogin) {
-            String username = getLoggedUser(exchange);
-            if (username == null || username.isEmpty()) {
-                io.jettra.flux.widgets.Modal modal = io.jettra.flux.widgets.Modal.of(
-                    io.jettra.flux.widgets.Column.of(
-                        io.jettra.flux.widgets.Label.of("Sesión Requerida").modifier(new io.jettra.flux.core.Modifier().cssClass("bold").padding(10)),
-                        io.jettra.flux.widgets.Paragraph.of("Su sesión ha expirado o no ha iniciado sesión. Redirigiendo al login en 3 segundos..."),
-                        io.jettra.flux.widgets.Paragraph.of("<script>setTimeout(function(){ window.location.href='" + io.jettra.server.JettraServer.resolvePath("/login") + "'; }, 3000);</script>")
-                    )
-                );
-                modal.open(true);
-                
-                String themeName = getThemeCookie(exchange);
-                if (themeName == null || themeName.isEmpty()) themeName = "Matrix";
-                io.jettra.flux.theme.ThemeData theme = getThemeByName(themeName);
-                
-                String html = "<!DOCTYPE html><html><head><meta charset=\"UTF-8\">"
-                        + "<link rel=\"stylesheet\" href=\"/static/font-awesome/css/all.min.css\">\n"
-                        + "<link rel=\"stylesheet\" href=\"/static/bootstrap-icons/font/bootstrap-icons.css\">\n"
-                        + "<link rel=\"stylesheet\" href=\"/static/material-icons/material-symbols.css\">\n"
-                        + theme.generateGlobalCss()
-                        + "</head><body style=\"margin:0; padding:0; box-sizing: border-box;\">"
-                        + io.jettra.flux.widgets.Scaffold.of().body(modal).render(theme)
-                        + "</body></html>";
-                        
-                renderResponse(exchange, html, 401);
-                return;
-            }
-            
-            // Verificación de @PageWidgetAllow
-            if (this.getClass().isAnnotationPresent(io.jettra.core.security.widget.PageWidgetAllow.class)) {
-                io.jettra.core.security.widget.PageWidgetAllow pageAllow = this.getClass().getAnnotation(io.jettra.core.security.widget.PageWidgetAllow.class);
-                String userRole = getLoggedRole(exchange);
-                String userDept = getLoggedDepartment(exchange);
-                boolean hasAccess = false;
-                java.util.List<String> requiredRoles = new java.util.ArrayList<>();
-                try {
-                    Object[] pageRolesArr = (Object[]) pageAllow.role();
-                    for (Object r : pageRolesArr) {
-                        requiredRoles.add((r instanceof Enum) ? ((Enum<?>) r).name() : String.valueOf(r));
-                    }
-                } catch (java.lang.annotation.AnnotationTypeMismatchException e) {
-                    java.util.regex.Matcher m = java.util.regex.Pattern.compile("AppRole\\.([A-Z0-9_]+)").matcher(e.getMessage());
-                    while (m.find()) {
-                        requiredRoles.add(m.group(1));
-                    }
-                }
+        String username = getLoggedUser(exchange);
+        SecurityContext securityCtx;
+        if (username != null && !username.isBlank()) {
+            String role = getLoggedRole(exchange);
+            String department = getLoggedDepartment(exchange);
+            SecurityPrincipal principal = SecurityPrincipal.of(username, role, department);
+            securityCtx = SecurityContext.authenticated(principal);
+        } else {
+            securityCtx = SecurityContext.unauthenticated();
+        }
+        SecurityContextHolder.setContext(securityCtx);
 
-                if (requiredRoles.isEmpty()) {
-                    hasAccess = true;
-                } else {
-                    for (String rName : requiredRoles) {
-                        if (rName.equalsIgnoreCase(userRole) || checkSynonym(rName, userRole)) {
-                            hasAccess = true;
-                            break;
-                        }
-                    }
+        try {
+            // --- Declarative Security Guard ---
+            SecurityDecision decision = PageSecurityGuard.evaluate(this.getClass(), securityCtx);
+            switch (decision) {
+                case SecurityDecision.Granted _ -> {
+                    // Authorized, proceed with lifecycle
                 }
-                if (hasAccess && !pageAllow.department().isEmpty()) {
-                    if (!pageAllow.department().equalsIgnoreCase(userDept)) {
-                        hasAccess = false;
-                    }
+                case SecurityDecision.RedirectToLogin(String loginPath) -> {
+                    redirect(exchange, loginPath);
+                    return;
                 }
-                if (!hasAccess) {
-                    String allowedRolesStr = String.join(",", requiredRoles);
-                    io.jettra.flux.widgets.Modal modal = io.jettra.flux.widgets.Modal.of(
-                        io.jettra.flux.widgets.Column.of(
-                            io.jettra.flux.widgets.Label.of("Acceso Denegado").modifier(new io.jettra.flux.core.Modifier().cssClass("bold").padding(10)),
-                            io.jettra.flux.widgets.Paragraph.of("No tienes los permisos (" + allowedRolesStr + ") necesarios para ver esta página."),
-                            io.jettra.flux.widgets.Paragraph.of("<button onclick=\"window.location.href='" + io.jettra.server.JettraServer.resolvePath("/login") + "'\" style=\"padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px;\">Cerrar</button>")
-                        )
-                    );
-                    modal.open(true);
-                    String themeName = getThemeCookie(exchange);
-                    if (themeName == null || themeName.isEmpty()) themeName = "Matrix";
-                    io.jettra.flux.theme.ThemeData theme = getThemeByName(themeName);
-                    String html = "<!DOCTYPE html><html><head><meta charset=\"UTF-8\">"
-                            + "<link rel=\"stylesheet\" href=\"/static/font-awesome/css/all.min.css\">\n"
-                            + "<link rel=\"stylesheet\" href=\"/static/bootstrap-icons/font/bootstrap-icons.css\">\n"
-                            + "<link rel=\"stylesheet\" href=\"/static/material-icons/material-symbols.css\">\n"
-                            + theme.generateGlobalCss()
-                            + "</head><body style=\"margin:0; padding:0; box-sizing: border-box;\">"
-                            + io.jettra.flux.widgets.Scaffold.of().body(modal).render(theme)
-                            + "</body></html>";
-                    renderResponse(exchange, html, 403);
+                case SecurityDecision.Denied(int statusCode, String reason, Set<String> requiredRoles) -> {
+                    renderAccessDenied(exchange, statusCode, reason, requiredRoles);
                     return;
                 }
             }
-        }
-        // --- Fin Security Filter ---
+            // --- End Security Guard ---
         
         Map<String, String> params = new HashMap<>(parseQueryParams(exchange.getRequestURI().getQuery()));
         
@@ -175,8 +118,7 @@ public abstract class FluxBaseHandler implements HttpHandler {
                             }
                         }
                         if (!hasAccess) {
-                            String errorHtml = "<script>alert('Acceso Denegado al Método: " + methodName + "'); window.history.back();</script>";
-                            renderResponse(exchange, errorHtml, 403);
+                            renderAccessDenied(exchange, 403, "Acceso Denegado al Método: " + methodName, new HashSet<>(actionRoles));
                             return;
                         }
                     }
@@ -234,6 +176,9 @@ public abstract class FluxBaseHandler implements HttpHandler {
                           "</body>\n</html>";
             renderResponse(exchange, html, 200);
         }
+        } finally {
+            SecurityContextHolder.clear();
+        }
     }
 
     protected abstract Widget buildUI(HttpExchange exchange, Map<String, String> params, String currentTheme);
@@ -262,6 +207,47 @@ public abstract class FluxBaseHandler implements HttpHandler {
         exchange.sendResponseHeaders(statusCode, bytes.length);
         exchange.getResponseBody().write(bytes);
         exchange.getResponseBody().close();
+    }
+
+    protected void renderAccessDenied(HttpExchange exchange, int statusCode, String message, Set<String> requiredRoles) throws IOException {
+        String themeName = getThemeCookie(exchange);
+        if (themeName == null || themeName.isEmpty()) themeName = "Matrix";
+        io.jettra.flux.theme.ColorMode colorMode = getColorModeCookie(exchange);
+        io.jettra.flux.theme.ThemeData theme = getThemeByName(themeName, colorMode);
+
+        String allowedRolesStr = (requiredRoles == null || requiredRoles.isEmpty())
+                ? ""
+                : "Roles requeridos: " + String.join(", ", requiredRoles);
+
+        Widget errorWidget = io.jettra.flux.widgets.Scaffold.of().body(
+            io.jettra.flux.widgets.Center.of(
+                io.jettra.flux.widgets.Card.of(
+                    io.jettra.flux.widgets.Column.of(
+                        io.jettra.flux.widgets.Icon.of("fas fa-shield-alt").modifier(new io.jettra.flux.core.Modifier().style("font-size: 48px; color: #ef4444; margin-bottom: 16px;")),
+                        io.jettra.flux.widgets.Label.of("Acceso Denegado (" + statusCode + ")").modifier(new io.jettra.flux.core.Modifier().style("font-size: 22px; font-weight: 700; margin-bottom: 8px;")),
+                        io.jettra.flux.widgets.Paragraph.of(message == null || message.isEmpty() ? "No cuenta con los privilegios suficientes para acceder a esta página." : message)
+                            .modifier(new io.jettra.flux.core.Modifier().style("font-size: 14px; margin-bottom: 12px; opacity: 0.85;")),
+                        allowedRolesStr.isEmpty() ? io.jettra.flux.widgets.Div.of() : io.jettra.flux.widgets.Paragraph.of(allowedRolesStr)
+                            .modifier(new io.jettra.flux.core.Modifier().style("font-size: 12px; font-weight: 600; margin-bottom: 20px; opacity: 0.7;")),
+                        io.jettra.flux.widgets.Link.of(JettraServer.resolvePath("/login"), "Volver al Inicio")
+                            .modifier(new io.jettra.flux.core.Modifier().style("display: inline-block; padding: 10px 20px; background: #0284c7; color: white; border-radius: 6px; text-decoration: none; font-weight: 600;"))
+                    ).modifier(new io.jettra.flux.core.Modifier().style("display: flex; flex-direction: column; align-items: center; text-align: center; padding: 32px 24px;"))
+                ).modifier(new io.jettra.flux.core.Modifier().style("max-width: 480px; width: 90%; margin: 60px auto;"))
+            )
+        );
+
+        String html = "<!DOCTYPE html>\n<html lang=\"en\" data-color-mode=\"" + colorMode.name().toLowerCase() + "\">\n<head>\n"
+                + "<meta charset=\"UTF-8\">\n"
+                + "<title>Acceso Denegado - " + statusCode + "</title>\n"
+                + "<link rel=\"stylesheet\" href=\"/static/font-awesome/css/all.min.css\">\n"
+                + "<link rel=\"stylesheet\" href=\"/static/bootstrap-icons/font/bootstrap-icons.css\">\n"
+                + "<link rel=\"stylesheet\" href=\"/static/material-icons/material-symbols.css\">\n"
+                + theme.generateGlobalCss() + "\n"
+                + "</head>\n<body style=\"margin:0; padding:0; box-sizing: border-box;\">\n"
+                + errorWidget.render(theme) + "\n"
+                + "</body>\n</html>";
+
+        renderResponse(exchange, html, statusCode);
     }
 
     protected void setSessionCookie(HttpExchange exchange, String username, String role, String department) {
