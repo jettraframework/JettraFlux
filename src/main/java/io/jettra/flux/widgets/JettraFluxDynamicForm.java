@@ -161,20 +161,42 @@ public class JettraFluxDynamicForm extends Widget {
           .append("      if (!form) return;\n")
           .append("      var sections = form.querySelectorAll('.jettra-flux-form-section');\n")
           .append("      sections.forEach(function(sec) {\n")
-          .append("        if (sec.getAttribute('data-section') === key) {\n")
-          .append("          sec.style.display = 'block';\n")
-          .append("        } else {\n")
-          .append("          sec.style.display = 'none';\n")
-          .append("        }\n")
+          .append("        var isMatch = (sec.getAttribute('data-section') === key);\n")
+          .append("        sec.style.display = isMatch ? 'block' : 'none';\n")
+          .append("        var controls = sec.querySelectorAll('input, select, textarea');\n")
+          .append("        controls.forEach(function(ctrl) {\n")
+          .append("          ctrl.disabled = !isMatch;\n")
+          .append("        });\n")
           .append("      });\n")
+          .append("    },\n")
+          .append("    serializeActive: function(formId) {\n")
+          .append("      var form = document.getElementById(formId);\n")
+          .append("      if (!form) return new URLSearchParams();\n")
+          .append("      var formData = new FormData(form);\n")
+          .append("      var params = new URLSearchParams();\n")
+          .append("      formData.forEach(function(val, k) {\n")
+          .append("        params.append(k, val);\n")
+          .append("      });\n")
+          .append("      return params;\n")
           .append("    },\n")
           .append("    reset: function(formId) {\n")
           .append("      var form = document.getElementById(formId);\n")
           .append("      if (form) form.reset();\n")
           .append("    }\n")
           .append("  };\n")
-          .append("}\n")
-          .append("</script>\n");
+          .append("}\n");
+
+        if (initialActiveSection != null && !initialActiveSection.isBlank()) {
+            sb.append("if (document.readyState === 'loading') {\n")
+              .append("  document.addEventListener('DOMContentLoaded', function() {\n")
+              .append("    window.JettraFluxDynamicForm.switchSection('").append(formId).append("', '").append(initialActiveSection).append("');\n")
+              .append("  });\n")
+              .append("} else {\n")
+              .append("  window.JettraFluxDynamicForm.switchSection('").append(formId).append("', '").append(initialActiveSection).append("');\n")
+              .append("}\n");
+        }
+
+        sb.append("</script>\n");
 
         return sb.toString();
     }

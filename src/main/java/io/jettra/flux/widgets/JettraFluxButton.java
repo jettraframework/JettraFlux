@@ -67,6 +67,7 @@ public class JettraFluxButton extends Widget {
     private String tooltip = null;
     private String jsOnClick = null;
     private String badge = null;
+    private String formId = null;
 
     private JettraFluxButton(String label) {
         this.label = label;
@@ -159,12 +160,28 @@ public class JettraFluxButton extends Widget {
         return this;
     }
 
+    public JettraFluxButton form(String formId) {
+        this.formId = formId;
+        return this;
+    }
+
+    public String form() {
+        return this.formId;
+    }
+
+    @Override
+    public JettraFluxButton onClick(java.util.function.Consumer<Object> onClick) {
+        this.onClick = onClick;
+        return this;
+    }
+
     @Override
     public String render(ThemeData theme) {
         StringBuilder sb = new StringBuilder();
 
         sb.append("<button type=\"").append(buttonType).append("\" ");
         if (id != null) sb.append("id=\"").append(id).append("\" ");
+        if (formId != null && !formId.isBlank()) sb.append("form=\"").append(formId).append("\" ");
         if (tooltip != null) sb.append("title=\"").append(tooltip).append("\" ");
         if (disabled) sb.append("disabled=\"disabled\" ");
 

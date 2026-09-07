@@ -8,6 +8,7 @@ public class RadioButton extends Widget {
     private String value = "";
     private boolean checked = false;
     private Widget label;
+    private String onChange = null;
 
     private RadioButton() {
     }
@@ -18,6 +19,12 @@ public class RadioButton extends Widget {
 
     public static RadioButton of(String id, String label) {
         return new RadioButton().name(id).label(label);
+    }
+
+    @Override
+    public RadioButton id(String id) {
+        super.id(id);
+        return this;
     }
 
     public RadioButton name(String name) {
@@ -32,6 +39,11 @@ public class RadioButton extends Widget {
 
     public RadioButton checked(boolean checked) {
         this.checked = checked;
+        return this;
+    }
+
+    public RadioButton onChange(String onChange) {
+        this.onChange = onChange;
         return this;
     }
 
@@ -59,6 +71,9 @@ public class RadioButton extends Widget {
         }
         if (checked) {
             sb.append("checked=\"checked\" ");
+        }
+        if (onChange != null && !onChange.isBlank()) {
+            sb.append("onchange=\"").append(onChange).append("\" ");
         }
         sb.append("/>\n");
         

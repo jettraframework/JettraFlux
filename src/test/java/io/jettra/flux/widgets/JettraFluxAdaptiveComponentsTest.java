@@ -130,4 +130,62 @@ public class JettraFluxAdaptiveComponentsTest {
         assertTrue(html.contains("show: function"));
         assertTrue(html.contains("hide: function"));
     }
+
+    @Test
+    @DisplayName("JettraFluxSelect: verify fluent options, binding, onChange, and rendering")
+    public void testJettraFluxSelect() {
+        JettraFluxSelect select = JettraFluxSelect.of("id_mode_select", "id_gen_mode")
+                .binding("id_mode")
+                .onChange("handleModeChange(this)")
+                .addOption("UUID", "UUID v4 (Automático)", true)
+                .addOption("SNOWFLAKE", "Snowflake (Distribuido)")
+                .addOption("MANUAL", "Manual");
+
+        assertNotNull(select);
+        assertEquals(3, select.options().size());
+        String html = select.render(Themes.FlatTheme());
+        assertTrue(html.contains("id=\"id_mode_select\""));
+        assertTrue(html.contains("name=\"id_gen_mode\""));
+        assertTrue(html.contains("data-binding=\"id_mode\""));
+        assertTrue(html.contains("onchange=\"handleModeChange(this)\""));
+        assertTrue(html.contains("value=\"UUID\" selected"));
+        assertTrue(html.contains("value=\"MANUAL\""));
+    }
+
+    @Test
+    @DisplayName("JettraFluxButton: verify form attribute binding and submit action")
+    public void testJettraFluxButtonFormBinding() {
+        JettraFluxButton btn = JettraFluxButton.of("Insertar Registro", "fas fa-plus-circle")
+                .id("btnAdaptiveSubmitInsert")
+                .form("adaptiveRecordInsertForm")
+                .variant(JettraFluxButton.Variant.PRIMARY)
+                .onClickJs("submitAdaptiveRecordInsert()")
+                .submit();
+
+        assertNotNull(btn);
+        assertEquals("adaptiveRecordInsertForm", btn.form());
+        String html = btn.render(Themes.FlatTheme());
+        assertTrue(html.contains("id=\"btnAdaptiveSubmitInsert\""));
+        assertTrue(html.contains("form=\"adaptiveRecordInsertForm\""));
+        assertTrue(html.contains("type=\"submit\""));
+        assertTrue(html.contains("submitAdaptiveRecordInsert()"));
+        assertTrue(html.contains("fas fa-plus-circle"));
+    }
+
+    @Test
+    @DisplayName("RadioButton: verify onChange event handler rendering")
+    public void testRadioButtonOnChange() {
+        RadioButton rb = RadioButton.of("rb_node", "Node (Vertex)")
+                .name("graph_mode")
+                .value("node")
+                .checked(true)
+                .onChange("handleGraphModeChange('node')");
+
+        assertNotNull(rb);
+        String html = rb.render(Themes.FlatTheme());
+        assertTrue(html.contains("name=\"graph_mode\""));
+        assertTrue(html.contains("value=\"node\""));
+        assertTrue(html.contains("checked=\"checked\""));
+        assertTrue(html.contains("onchange=\"handleGraphModeChange('node')\""));
+    }
 }
