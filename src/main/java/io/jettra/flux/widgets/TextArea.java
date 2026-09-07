@@ -17,6 +17,16 @@ public class TextArea extends Widget {
         return new TextArea();
     }
 
+    public static TextArea of() {
+        return new TextArea();
+    }
+
+    public static TextArea of(String name) {
+        TextArea ta = new TextArea();
+        ta.name = name;
+        return ta;
+    }
+
     public TextArea name(String name) {
         this.name = name;
         return this;

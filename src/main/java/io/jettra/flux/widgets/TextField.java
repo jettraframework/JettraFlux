@@ -14,6 +14,14 @@ public class TextField extends Widget {
         this.placeholder = placeholder;
     }
 
+    public static TextField of() {
+        return new TextField("", "");
+    }
+
+    public static TextField of(String name) {
+        return new TextField(name, "");
+    }
+
     public static TextField of(String name, String placeholder) {
         return new TextField(name, placeholder);
     }
