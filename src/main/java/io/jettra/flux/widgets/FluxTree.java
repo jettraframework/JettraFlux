@@ -1,12 +1,19 @@
 package io.jettra.flux.widgets;
 
+import io.jettra.flux.core.FluxEscapers;
+import io.jettra.flux.core.Modifier;
 import io.jettra.flux.core.Widget;
 import io.jettra.flux.theme.ThemeData;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Gatherers;
 
 /**
  * Native First-Class Tree Widget for JettraFlux.
@@ -134,8 +141,10 @@ public class FluxTree<T> extends Widget {
 
     /**
      * Recursively expands all nodes in the tree in memory and notifies observers.
+     *
+     * @return this tree for fluent chaining
      */
-    public void expandAll() {
+    public FluxTree<T> expandAll() {
         for (FluxTreeNode<T> root : rootNodes) {
             root.expandAll();
         }
@@ -144,12 +153,15 @@ public class FluxTree<T> extends Widget {
                 observer.onTreeExpandedAll();
             } catch (Exception ignored) {}
         }
+        return this;
     }
 
     /**
      * Recursively collapses all nodes in the tree in memory and notifies observers.
+     *
+     * @return this tree for fluent chaining
      */
-    public void collapseAll() {
+    public FluxTree<T> collapseAll() {
         for (FluxTreeNode<T> root : rootNodes) {
             root.collapseAll();
         }
@@ -158,6 +170,192 @@ public class FluxTree<T> extends Widget {
                 observer.onTreeCollapsedAll();
             } catch (Exception ignored) {}
         }
+        return this;
+    }
+
+    /**
+     * Recursively sets expansion state for all nodes in the tree.
+     *
+     * @param expanded true to expand all, false to collapse all
+     * @return this tree for fluent chaining
+     */
+    public FluxTree<T> setAllExpanded(boolean expanded) {
+        return expanded ? expandAll() : collapseAll();
+    }
+
+    /**
+     * Collapses all nested/secondary levels in the tree while preserving root nodes expanded.
+     *
+     * @return this tree for fluent chaining
+     */
+    public FluxTree<T> collapseToRoot() {
+        for (FluxTreeNode<T> root : rootNodes) {
+            root.collapseChildren(true);
+        }
+        for (FluxTreeStateObserver<T> observer : observers) {
+            try {
+                observer.onTreeCollapsedAll();
+            } catch (Exception ignored) {}
+        }
+        return this;
+    }
+
+    /**
+     * Collapses tree children, optionally preserving root node expansion.
+     *
+     * @param preserveRoots whether to keep root nodes expanded
+     * @return this tree for fluent chaining
+     */
+    public FluxTree<T> collapseChildren(boolean preserveRoots) {
+        return preserveRoots ? collapseToRoot() : collapseAll();
+    }
+
+    /**
+     * Applies an immutable expansion state record to matching nodes in the tree.
+     *
+     * @param state node expansion state
+     * @return this tree for fluent chaining
+     */
+    public FluxTree<T> applyExpansionState(NodeExpansionState state) {
+        if (state != null) {
+            FluxTreeNode<T> node = findNode(state.nodeId());
+            if (node != null) {
+                node.applyExpansionState(state);
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Applies a collection of immutable expansion states to the tree.
+     *
+     * @param states collection of node expansion states
+     * @return this tree for fluent chaining
+     */
+    public FluxTree<T> applyExpansionStates(Collection<NodeExpansionState> states) {
+        if (states == null || states.isEmpty()) return this;
+        Map<String, NodeExpansionState> map = new HashMap<>();
+        for (NodeExpansionState s : states) {
+            if (s != null) map.put(s.nodeId(), s);
+        }
+        accept(node -> {
+            NodeExpansionState s = map.get(node.getId());
+            if (s != null) {
+                node.applyExpansionState(s);
+            }
+        });
+        return this;
+    }
+
+    /**
+     * Collects immutable expansion state records for all nodes in the tree.
+     *
+     * @return list of expansion states
+     */
+    public List<NodeExpansionState> collectExpansionStates() {
+        List<NodeExpansionState> list = new ArrayList<>();
+        for (FluxTreeNode<T> root : rootNodes) {
+            list.addAll(root.collectExpansionStates());
+        }
+        return Collections.unmodifiableList(list);
+    }
+
+    /**
+     * Immutable record representing aggregated tree expansion metrics.
+     */
+    public record TreeExpansionSummary(int totalNodes, int expandedNodes, int collapsedNodes) {}
+
+    /**
+     * Calculates tree expansion summary using Java 25 Stream Gatherers fold operation
+     * and Pattern Matching over sealed NodeExpansionState records.
+     *
+     * @return calculated expansion summary
+     */
+    public TreeExpansionSummary summarizeExpansion() {
+        return flatten().stream()
+            .map(FluxTreeNode::getExpansionState)
+            .gather(Gatherers.fold(
+                () -> new TreeExpansionSummary(0, 0, 0),
+                (acc, state) -> switch (state) {
+                    case NodeExpansionState.ExpandedNodeState e ->
+                        new TreeExpansionSummary(acc.totalNodes() + 1, acc.expandedNodes() + 1, acc.collapsedNodes());
+                    case NodeExpansionState.CollapsedNodeState c ->
+                        new TreeExpansionSummary(acc.totalNodes() + 1, acc.expandedNodes(), acc.collapsedNodes() + 1);
+                }
+            ))
+            .findFirst()
+            .orElse(new TreeExpansionSummary(0, 0, 0));
+    }
+
+    // --- Button Factory Methods (Pure JettraFlux API) ---
+
+    public Button createExpandAllButton() {
+        return expandAllButton(this.treeId);
+    }
+
+    public Button createExpandAllButton(String label, String icon) {
+        return expandAllButton(this.treeId, label, icon);
+    }
+
+    public Button createCollapseAllButton() {
+        return collapseAllButton(this.treeId);
+    }
+
+    public Button createCollapseAllButton(String label, String icon) {
+        return collapseAllButton(this.treeId, label, icon);
+    }
+
+    public Button createCollapseToRootButton() {
+        return collapseToRootButton(this.treeId);
+    }
+
+    public Button createCollapseToRootButton(String label, String icon) {
+        return collapseToRootButton(this.treeId, label, icon);
+    }
+
+    public static Button expandAllButton(String treeId) {
+        return expandAllButton(treeId, "Expand All", "fas fa-expand-alt");
+    }
+
+    public static Button expandAllButton(String treeId, String label, String icon) {
+        Button btn = Button.of(Icon.of(icon != null ? icon : "fas fa-expand-alt"), Text.of(" " + label));
+        btn.modifier(new Modifier()
+            .attribute("type", "button")
+            .attribute("title", label)
+            .attribute("onclick", "if (window.expandAllTreeNodes) { expandAllTreeNodes(); } else if (window.FluxTree) { window.FluxTree.expandAll('" + FluxEscapers.escapeJs(treeId) + "'); }")
+            .cssClass("btn-action btn-secondary")
+            .style("padding:3px 6px; font-size:9px; margin-right:3px; background:var(--j-primary-light,rgba(56,189,248,0.15)); border-color:var(--j-primary,#38bdf8); color:var(--j-primary,#38bdf8); font-weight:600; cursor:pointer;"));
+        return btn;
+    }
+
+    public static Button collapseAllButton(String treeId) {
+        return collapseAllButton(treeId, "Collapse All", "fas fa-compress-alt");
+    }
+
+    public static Button collapseAllButton(String treeId, String label, String icon) {
+        Button btn = Button.of(Icon.of(icon != null ? icon : "fas fa-compress-alt"), Text.of(" " + label));
+        btn.modifier(new Modifier()
+            .attribute("type", "button")
+            .attribute("title", label)
+            .attribute("onclick", "if (window.collapseAllTreeNodes) { collapseAllTreeNodes(); } else if (window.FluxTree) { window.FluxTree.collapseAll('" + FluxEscapers.escapeJs(treeId) + "'); }")
+            .cssClass("btn-action btn-secondary")
+            .style("padding:3px 6px; font-size:9px; margin-right:4px; background:var(--j-bg-subsurface,#1e293b); border-color:var(--j-border,#334155); color:var(--j-text-muted,#94a3b8); font-weight:600; cursor:pointer;"));
+        return btn;
+    }
+
+    public static Button collapseToRootButton(String treeId) {
+        return collapseToRootButton(treeId, "Collapse All", "fas fa-compress-alt");
+    }
+
+    public static Button collapseToRootButton(String treeId, String label, String icon) {
+        Button btn = Button.of(Icon.of(icon != null ? icon : "fas fa-compress-alt"), Text.of(" " + label));
+        btn.modifier(new Modifier()
+            .attribute("type", "button")
+            .attribute("title", label)
+            .attribute("onclick", "if (window.collapseAllTreeNodes) { collapseAllTreeNodes(); } else if (window.FluxTree) { window.FluxTree.collapseToRoot('" + FluxEscapers.escapeJs(treeId) + "'); }")
+            .cssClass("btn-action btn-secondary")
+            .style("padding:3px 6px; font-size:9px; margin-right:4px; background:var(--j-bg-subsurface,#1e293b); border-color:var(--j-border,#334155); color:var(--j-text-muted,#94a3b8); font-weight:600; cursor:pointer;"));
+        return btn;
     }
 
     /**
@@ -240,6 +438,12 @@ public class FluxTree<T> extends Widget {
           .append("  window.FluxTree.expandAll = function(treeId) {\n")
           .append("    var root = treeId ? document.getElementById(treeId) : document;\n")
           .append("    if (!root) root = document;\n")
+          .append("    var parent = root.closest ? root.closest('.db-subtree-container, .tree-collapsible-content') : null;\n")
+          .append("    if (parent) {\n")
+          .append("      parent.style.display = 'block';\n")
+          .append("      parent.setAttribute('aria-expanded', 'true');\n")
+          .append("      parent.setAttribute('data-state', 'expanded');\n")
+          .append("    }\n")
           .append("    var groups = root.querySelectorAll('.flux-tree-group');\n")
           .append("    for (var i = 0; i < groups.length; i++) { groups[i].style.display = 'block'; }\n")
           .append("    var nodes = root.querySelectorAll('.flux-tree-node');\n")
@@ -249,17 +453,44 @@ public class FluxTree<T> extends Widget {
           .append("    var icons = root.querySelectorAll('.flux-tree-toggle-icon');\n")
           .append("    for (var l = 0; l < icons.length; l++) { icons[l].className = 'fas fa-chevron-down flux-tree-toggle-icon'; }\n")
           .append("  };\n")
-          .append("  window.FluxTree.collapseAll = function(treeId) {\n")
+          .append("  window.FluxTree.collapseAll = function(treeId, preserveRoot) {\n")
           .append("    var root = treeId ? document.getElementById(treeId) : document;\n")
           .append("    if (!root) root = document;\n")
           .append("    var groups = root.querySelectorAll('.flux-tree-group');\n")
-          .append("    for (var i = 0; i < groups.length; i++) { groups[i].style.display = 'none'; }\n")
+          .append("    for (var i = 0; i < groups.length; i++) {\n")
+          .append("      if (preserveRoot && groups[i].parentElement && groups[i].parentElement.parentElement === root) {\n")
+          .append("        groups[i].style.display = 'block';\n")
+          .append("        continue;\n")
+          .append("      }\n")
+          .append("      groups[i].style.display = 'none';\n")
+          .append("    }\n")
           .append("    var nodes = root.querySelectorAll('.flux-tree-node');\n")
-          .append("    for (var j = 0; j < nodes.length; j++) { nodes[j].setAttribute('aria-expanded', 'false'); }\n")
+          .append("    for (var j = 0; j < nodes.length; j++) {\n")
+          .append("      if (preserveRoot && nodes[j].parentElement === root) {\n")
+          .append("        nodes[j].setAttribute('aria-expanded', 'true');\n")
+          .append("        continue;\n")
+          .append("      }\n")
+          .append("      nodes[j].setAttribute('aria-expanded', 'false');\n")
+          .append("    }\n")
           .append("    var btns = root.querySelectorAll('.flux-tree-toggle-btn');\n")
-          .append("    for (var k = 0; k < btns.length; k++) { btns[k].setAttribute('aria-expanded', 'false'); }\n")
+          .append("    for (var k = 0; k < btns.length; k++) {\n")
+          .append("      if (preserveRoot && btns[k].closest('.flux-tree-node') && btns[k].closest('.flux-tree-node').parentElement === root) {\n")
+          .append("        btns[k].setAttribute('aria-expanded', 'true');\n")
+          .append("        continue;\n")
+          .append("      }\n")
+          .append("      btns[k].setAttribute('aria-expanded', 'false');\n")
+          .append("    }\n")
           .append("    var icons = root.querySelectorAll('.flux-tree-toggle-icon');\n")
-          .append("    for (var l = 0; l < icons.length; l++) { icons[l].className = 'fas fa-chevron-right flux-tree-toggle-icon'; }\n")
+          .append("    for (var l = 0; l < icons.length; l++) {\n")
+          .append("      if (preserveRoot && icons[l].closest('.flux-tree-node') && icons[l].closest('.flux-tree-node').parentElement === root) {\n")
+          .append("        icons[l].className = 'fas fa-chevron-down flux-tree-toggle-icon';\n")
+          .append("        continue;\n")
+          .append("      }\n")
+          .append("      icons[l].className = 'fas fa-chevron-right flux-tree-toggle-icon';\n")
+          .append("    }\n")
+          .append("  };\n")
+          .append("  window.FluxTree.collapseToRoot = function(treeId) {\n")
+          .append("    window.FluxTree.collapseAll(treeId, true);\n")
           .append("  };\n")
           .append("</script>\n");
 

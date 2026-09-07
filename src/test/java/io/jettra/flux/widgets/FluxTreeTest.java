@@ -167,5 +167,94 @@ public class FluxTreeTest {
         assertTrue(html.contains("window.FluxTree.toggle"), "Must include FluxTree.toggle client controller");
         assertTrue(html.contains("window.FluxTree.expandAll"), "Must include FluxTree.expandAll client controller");
         assertTrue(html.contains("window.FluxTree.collapseAll"), "Must include FluxTree.collapseAll client controller");
+        assertTrue(html.contains("window.FluxTree.collapseToRoot"), "Must include FluxTree.collapseToRoot client controller");
+    }
+
+    @Test
+    @DisplayName("Test collapseToRoot: preserve root level while collapsing all child descendants")
+    public void testCollapseToRootPreservingRootNodes() {
+        FluxTreeNode<String> root = FluxTreeNode.of("r1", "Root");
+        FluxTreeNode<String> child1 = FluxTreeNode.of("c1", "Child 1");
+        FluxTreeNode<String> grandChild = FluxTreeNode.of("gc1", "GrandChild 1");
+
+        child1.child(grandChild);
+        root.child(child1);
+
+        FluxTree<String> tree = FluxTree.of(root);
+        tree.expandAll();
+
+        assertTrue(root.isExpanded());
+        assertTrue(child1.isExpanded());
+        assertTrue(grandChild.isExpanded());
+
+        // Collapse to root
+        tree.collapseToRoot();
+
+        assertTrue(root.isExpanded(), "Root node must remain expanded after collapseToRoot");
+        assertFalse(child1.isExpanded(), "Child 1 must be collapsed");
+        assertFalse(grandChild.isExpanded(), "Grandchild must be collapsed");
+    }
+
+    @Test
+    @DisplayName("Java 25: Test NodeExpansionState sealed records and Pattern Matching dispatch")
+    public void testNodeExpansionStatePatternMatchingAndRecords() {
+        NodeExpansionState expandedState = NodeExpansionState.expanded("node_orders");
+        NodeExpansionState collapsedState = NodeExpansionState.collapsed("node_items");
+
+        assertTrue(expandedState.isExpanded());
+        assertFalse(collapsedState.isExpanded());
+
+        assertEquals("EXPANDED:node_orders", NodeExpansionState.describe(expandedState));
+        assertEquals("COLLAPSED:node_items", NodeExpansionState.describe(collapsedState));
+
+        FluxTreeNode<String> node = FluxTreeNode.of("node_orders", "Orders");
+        assertFalse(node.isExpanded());
+
+        node.applyExpansionState(expandedState);
+        assertTrue(node.isExpanded(), "Pattern matching must apply expanded state");
+
+        node.applyExpansionState(collapsedState); // mismatching id, shouldn't change
+        assertTrue(node.isExpanded());
+
+        node.applyExpansionState(NodeExpansionState.collapsed("node_orders"));
+        assertFalse(node.isExpanded(), "Pattern matching must apply collapsed state");
+    }
+
+    @Test
+    @DisplayName("Java 25: Test Stream Gatherers fold aggregation for TreeExpansionSummary")
+    public void testStreamGathererExpansionSummary() {
+        FluxTreeNode<String> root = FluxTreeNode.of("r", "Root");
+        FluxTreeNode<String> c1 = FluxTreeNode.of("c1", "Child 1");
+        FluxTreeNode<String> c2 = FluxTreeNode.of("c2", "Child 2");
+
+        root.child(c1).child(c2);
+        FluxTree<String> tree = FluxTree.of(root);
+
+        root.expand();
+        c1.expand();
+        c2.collapse();
+
+        FluxTree.TreeExpansionSummary summary = tree.summarizeExpansion();
+
+        assertEquals(3, summary.totalNodes(), "Must summarize 3 total nodes");
+        assertEquals(2, summary.expandedNodes(), "Must summarize 2 expanded nodes");
+        assertEquals(1, summary.collapsedNodes(), "Must summarize 1 collapsed node");
+    }
+
+    @Test
+    @DisplayName("Test Button Factory: Pure JettraFlux API generation for Expand All and Collapse All")
+    public void testButtonFactoryGeneration() {
+        FluxTree<String> tree = FluxTree.of("test_tree");
+        io.jettra.flux.core.Widget expandBtn = tree.createExpandAllButton();
+        io.jettra.flux.core.Widget collapseBtn = tree.createCollapseToRootButton();
+
+        String expandHtml = expandBtn.render(Themes.FlatTheme());
+        String collapseHtml = collapseBtn.render(Themes.FlatTheme());
+
+        assertNotNull(expandHtml);
+        assertNotNull(collapseHtml);
+
+        assertTrue(expandHtml.contains("FluxTree.expandAll('test_tree')"), "Expand button must call FluxTree.expandAll");
+        assertTrue(collapseHtml.contains("FluxTree.collapseToRoot('test_tree')"), "Collapse button must call FluxTree.collapseToRoot");
     }
 }

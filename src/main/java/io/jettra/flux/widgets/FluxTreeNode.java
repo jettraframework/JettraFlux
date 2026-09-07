@@ -233,21 +233,103 @@ public class FluxTreeNode<T> {
 
     /**
      * Recursively expands this node and all of its descendants.
+     *
+     * @return this node for fluent chaining
      */
-    public void expandAll() {
+    public FluxTreeNode<T> expandAll() {
         this.expanded = true;
         for (FluxTreeNode<T> child : children) {
             child.expandAll();
         }
+        return this;
     }
 
     /**
      * Recursively collapses this node and all of its descendants.
+     *
+     * @return this node for fluent chaining
      */
-    public void collapseAll() {
+    public FluxTreeNode<T> collapseAll() {
         this.expanded = false;
         for (FluxTreeNode<T> child : children) {
             child.collapseAll();
+        }
+        return this;
+    }
+
+    /**
+     * Recursively sets expansion state for this node and all of its descendants.
+     *
+     * @param expanded true to expand all, false to collapse all
+     * @return this node for fluent chaining
+     */
+    public FluxTreeNode<T> setAllExpanded(boolean expanded) {
+        return expanded ? expandAll() : collapseAll();
+    }
+
+    /**
+     * Recursively collapses all child descendants while preserving this node's expansion state.
+     *
+     * @param preserveThis whether to keep this node expanded
+     * @return this node for fluent chaining
+     */
+    public FluxTreeNode<T> collapseChildren(boolean preserveThis) {
+        if (preserveThis) {
+            this.expanded = true;
+        } else {
+            this.expanded = false;
+        }
+        for (FluxTreeNode<T> child : children) {
+            child.collapseAll();
+        }
+        return this;
+    }
+
+    /**
+     * Captures the current expansion state of this node as an immutable Record.
+     *
+     * @return NodeExpansionState record
+     */
+    public NodeExpansionState getExpansionState() {
+        return expanded ? new NodeExpansionState.ExpandedNodeState(id) : new NodeExpansionState.CollapsedNodeState(id);
+    }
+
+    /**
+     * Applies an immutable expansion state record to this node using Java 25 Pattern Matching.
+     *
+     * @param state expansion state record
+     */
+    public void applyExpansionState(NodeExpansionState state) {
+        if (state == null) return;
+        switch (state) {
+            case NodeExpansionState.ExpandedNodeState(String targetId) -> {
+                if (Objects.equals(this.id, targetId)) {
+                    this.expanded = true;
+                }
+            }
+            case NodeExpansionState.CollapsedNodeState(String targetId) -> {
+                if (Objects.equals(this.id, targetId)) {
+                    this.expanded = false;
+                }
+            }
+        }
+    }
+
+    /**
+     * Collects immutable expansion state records for this node and all descendants.
+     *
+     * @return list of expansion state records
+     */
+    public List<NodeExpansionState> collectExpansionStates() {
+        List<NodeExpansionState> states = new ArrayList<>();
+        collectExpansionStates(states);
+        return Collections.unmodifiableList(states);
+    }
+
+    private void collectExpansionStates(List<NodeExpansionState> acc) {
+        acc.add(getExpansionState());
+        for (FluxTreeNode<T> child : children) {
+            child.collectExpansionStates(acc);
         }
     }
 
