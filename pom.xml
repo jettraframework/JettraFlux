@@ -28,6 +28,13 @@
         
         <dependency>
             <groupId>io.jettra</groupId>
+            <artifactId>JettraJSON</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>io.jettra</groupId>
             <artifactId>JettraAnnotation</artifactId>
             <version>${jettra.annotation.version}</version>
         </dependency>

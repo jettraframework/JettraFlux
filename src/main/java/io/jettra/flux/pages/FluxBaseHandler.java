@@ -133,6 +133,22 @@ public abstract class FluxBaseHandler implements HttpHandler {
             if (onPost(exchange, params)) {
                 return; // If onPost returns true, it handled the response (e.g. redirect)
             }
+
+            // If client expected JSON and onPost did not handle it, return structured JSON error instead of HTML UI
+            String accept = exchange.getRequestHeaders() != null ? exchange.getRequestHeaders().getFirst("Accept") : null;
+            String reqWith = exchange.getRequestHeaders() != null ? exchange.getRequestHeaders().getFirst("X-Requested-With") : null;
+            if ((accept != null && accept.contains("application/json")) || "XMLHttpRequest".equalsIgnoreCase(reqWith)) {
+                String path = exchange.getRequestURI() != null ? exchange.getRequestURI().getPath() : "";
+                String jsonErr = "{\"status\":400,\"error\":\"Bad Request\",\"message\":\"Unhandled action or missing operation parameters for POST " + path + "\",\"timestamp\":" + System.currentTimeMillis() + "}";
+                byte[] bytes = jsonErr.getBytes(StandardCharsets.UTF_8);
+                exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+                exchange.sendResponseHeaders(400, bytes.length);
+                try (java.io.OutputStream os = exchange.getResponseBody()) {
+                    os.write(bytes);
+                    os.flush();
+                }
+                return;
+            }
         } else {
             if (onGet(exchange, params)) {
                 return; // If onGet returns true, it handled the response
@@ -210,6 +226,21 @@ public abstract class FluxBaseHandler implements HttpHandler {
     }
 
     protected void renderAccessDenied(HttpExchange exchange, int statusCode, String message, Set<String> requiredRoles) throws IOException {
+        String accept = exchange.getRequestHeaders() != null ? exchange.getRequestHeaders().getFirst("Accept") : null;
+        String reqWith = exchange.getRequestHeaders() != null ? exchange.getRequestHeaders().getFirst("X-Requested-With") : null;
+        if ((accept != null && accept.contains("application/json")) || "XMLHttpRequest".equalsIgnoreCase(reqWith)) {
+            String rolesJson = (requiredRoles == null || requiredRoles.isEmpty()) ? "[]" : "[\"" + String.join("\",\"", requiredRoles) + "\"]";
+            String jsonErr = "{\"status\":" + statusCode + ",\"error\":\"Forbidden\",\"message\":\"" + (message != null ? message.replace("\"", "\\\"") : "Access Denied") + "\",\"requiredRoles\":" + rolesJson + ",\"timestamp\":" + System.currentTimeMillis() + "}";
+            byte[] bytes = jsonErr.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+            exchange.sendResponseHeaders(statusCode, bytes.length);
+            try (java.io.OutputStream os = exchange.getResponseBody()) {
+                os.write(bytes);
+                os.flush();
+            }
+            return;
+        }
+
         String themeName = getThemeCookie(exchange);
         if (themeName == null || themeName.isEmpty()) themeName = "Matrix";
         io.jettra.flux.theme.ColorMode colorMode = getColorModeCookie(exchange);
@@ -416,10 +447,36 @@ public abstract class FluxBaseHandler implements HttpHandler {
         while ((len = is.read(buffer)) != -1) {
             sb.append(new String(buffer, 0, len, StandardCharsets.UTF_8));
         }
-        String formData = sb.toString();
+        String body = sb.toString();
         Map<String, String> map = new HashMap<>();
-        if (formData.isEmpty()) return map;
-        for (String pair : formData.split("&")) {
+        if (body.isEmpty()) return map;
+        map.put("_raw_body", body);
+
+        String contentType = exchange.getRequestHeaders() != null ? exchange.getRequestHeaders().getFirst("Content-Type") : null;
+        boolean isJson = (contentType != null && contentType.toLowerCase().contains("application/json"))
+                || (body.trim().startsWith("{") && body.trim().endsWith("}"));
+
+        if (isJson) {
+            try {
+                io.jettra.json.JettraJson json = new io.jettra.json.JettraJson();
+                io.jettra.json.JsonObject jsonObj = json.fromJson(body, io.jettra.json.JsonObject.class);
+                if (jsonObj != null) {
+                    for (String key : jsonObj.keySet()) {
+                        Object val = jsonObj.get(key);
+                        if (val == null) {
+                            map.put(key, "");
+                        } else if (val instanceof io.jettra.json.JsonObject || val instanceof io.jettra.json.JsonArray) {
+                            map.put(key, json.toJson(val));
+                        } else {
+                            map.put(key, String.valueOf(val));
+                        }
+                    }
+                    return map;
+                }
+            } catch (Exception ignored) {}
+        }
+
+        for (String pair : body.split("&")) {
             int eqIdx = pair.indexOf('=');
             try {
                 if (eqIdx >= 0) {
