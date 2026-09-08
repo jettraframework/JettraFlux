@@ -421,7 +421,12 @@ public class FluxTree<T> extends Widget {
           .append("    var node = document.getElementById('node_' + nodeId);\n")
           .append("    var btn = document.getElementById('btn_toggle_' + nodeId);\n")
           .append("    var icon = document.getElementById('icon_' + nodeId);\n")
-          .append("    if (!group) return;\n")
+          .append("    if (!group) {\n")
+          .append("      if (document.getElementById('details_' + nodeId)) {\n")
+          .append("        window.FluxTree.toggleDetails(nodeId, treeId);\n")
+          .append("      }\n")
+          .append("      return;\n")
+          .append("    }\n")
           .append("    var isExpanded = group.style.display !== 'none';\n")
           .append("    if (isExpanded) {\n")
           .append("      group.style.display = 'none';\n")
@@ -431,6 +436,24 @@ public class FluxTree<T> extends Widget {
           .append("    } else {\n")
           .append("      group.style.display = 'block';\n")
           .append("      if (node) node.setAttribute('aria-expanded', 'true');\n")
+          .append("      if (btn) btn.setAttribute('aria-expanded', 'true');\n")
+          .append("      if (icon) { icon.className = 'fas fa-chevron-down flux-tree-toggle-icon'; }\n")
+          .append("    }\n")
+          .append("  };\n")
+          .append("  window.FluxTree.toggleDetails = function(nodeId, treeId) {\n")
+          .append("    var details = document.getElementById('details_' + nodeId);\n")
+          .append("    var btn = document.getElementById('btn_toggle_details_' + nodeId);\n")
+          .append("    var icon = document.getElementById('icon_details_' + nodeId);\n")
+          .append("    if (!details) return;\n")
+          .append("    var isExpanded = details.style.display !== 'none';\n")
+          .append("    if (isExpanded) {\n")
+          .append("      details.style.display = 'none';\n")
+          .append("      details.setAttribute('aria-expanded', 'false');\n")
+          .append("      if (btn) btn.setAttribute('aria-expanded', 'false');\n")
+          .append("      if (icon) { icon.className = 'fas fa-chevron-right flux-tree-toggle-icon'; }\n")
+          .append("    } else {\n")
+          .append("      details.style.display = 'block';\n")
+          .append("      details.setAttribute('aria-expanded', 'true');\n")
           .append("      if (btn) btn.setAttribute('aria-expanded', 'true');\n")
           .append("      if (icon) { icon.className = 'fas fa-chevron-down flux-tree-toggle-icon'; }\n")
           .append("    }\n")
@@ -452,6 +475,8 @@ public class FluxTree<T> extends Widget {
           .append("    for (var k = 0; k < btns.length; k++) { btns[k].setAttribute('aria-expanded', 'true'); }\n")
           .append("    var icons = root.querySelectorAll('.flux-tree-toggle-icon');\n")
           .append("    for (var l = 0; l < icons.length; l++) { icons[l].className = 'fas fa-chevron-down flux-tree-toggle-icon'; }\n")
+          .append("    var detailsPanels = root.querySelectorAll('.flux-tree-details-panel');\n")
+          .append("    for (var d = 0; d < detailsPanels.length; d++) { detailsPanels[d].style.display = 'block'; detailsPanels[d].setAttribute('aria-expanded', 'true'); }\n")
           .append("  };\n")
           .append("  window.FluxTree.collapseAll = function(treeId, preserveRoot) {\n")
           .append("    var root = treeId ? document.getElementById(treeId) : document;\n")
@@ -488,6 +513,8 @@ public class FluxTree<T> extends Widget {
           .append("      }\n")
           .append("      icons[l].className = 'fas fa-chevron-right flux-tree-toggle-icon';\n")
           .append("    }\n")
+          .append("    var detailsPanels = root.querySelectorAll('.flux-tree-details-panel');\n")
+          .append("    for (var d = 0; d < detailsPanels.length; d++) { detailsPanels[d].style.display = 'none'; detailsPanels[d].setAttribute('aria-expanded', 'false'); }\n")
           .append("  };\n")
           .append("  window.FluxTree.collapseToRoot = function(treeId) {\n")
           .append("    window.FluxTree.collapseAll(treeId, true);\n")
@@ -500,9 +527,12 @@ public class FluxTree<T> extends Widget {
     private void renderNode(StringBuilder sb, FluxTreeNode<T> node, ThemeData theme) {
         String nodeId = node.getId();
         boolean hasChildren = node.hasChildren();
+        boolean hasDetails = node.hasDetails();
         boolean isExpanded = node.isExpanded();
+        boolean isDetailsExpanded = node.isDetailsExpanded();
         String groupDisplay = isExpanded ? "block" : "none";
         String chevronIcon = isExpanded ? "fas fa-chevron-down" : "fas fa-chevron-right";
+        String detailsChevron = isDetailsExpanded ? "fas fa-chevron-down" : "fas fa-chevron-right";
 
         sb.append("<div id=\"node_").append(nodeId).append("\" role=\"treeitem\" aria-expanded=\"")
           .append(isExpanded).append("\" class=\"flux-tree-node\" style=\"display:flex; flex-direction:column;\">\n");
@@ -514,6 +544,8 @@ public class FluxTree<T> extends Widget {
         sb.append("    <div style=\"display:inline-flex; align-items:center; gap:5px; min-width:0; flex:1; cursor:pointer;\" ");
         if (hasChildren) {
             sb.append("onclick=\"FluxTree.toggle('").append(nodeId).append("', '").append(treeId).append("')\" ");
+        } else if (hasDetails) {
+            sb.append("onclick=\"FluxTree.toggleDetails('").append(nodeId).append("', '").append(treeId).append("')\" ");
         } else if (onNodeSelectJs != null) {
             sb.append("onclick=\"").append(onNodeSelectJs.replace("{id}", nodeId)).append("\" ");
         }
@@ -525,6 +557,13 @@ public class FluxTree<T> extends Widget {
               .append("onclick=\"event.stopPropagation(); FluxTree.toggle('").append(nodeId).append("', '").append(treeId).append("')\" ")
               .append("style=\"background:none; border:none; padding:2px 4px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:var(--j-primary,#38bdf8); font-size:10px;\">")
               .append("<i id=\"icon_").append(nodeId).append("\" class=\"").append(chevronIcon).append(" flux-tree-toggle-icon\"></i>")
+              .append("</button>\n");
+        } else if (hasDetails) {
+            sb.append("      <button id=\"btn_toggle_details_").append(nodeId).append("\" type=\"button\" class=\"flux-tree-toggle-btn flux-tree-details-toggle\" ")
+              .append("aria-expanded=\"").append(isDetailsExpanded).append("\" aria-controls=\"details_").append(nodeId).append("\" ")
+              .append("onclick=\"event.stopPropagation(); FluxTree.toggleDetails('").append(nodeId).append("', '").append(treeId).append("')\" ")
+              .append("style=\"background:none; border:none; padding:2px 4px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:var(--j-primary,#38bdf8); font-size:10px;\">")
+              .append("<i id=\"icon_details_").append(nodeId).append("\" class=\"").append(detailsChevron).append(" flux-tree-toggle-icon\"></i>")
               .append("</button>\n");
         } else {
             // Leaf indentation spacer
@@ -550,6 +589,15 @@ public class FluxTree<T> extends Widget {
               .append("</span>\n");
         }
 
+        // If node has BOTH children AND details, also show a small Info badge button to toggle details
+        if (hasChildren && hasDetails) {
+            sb.append("      <button id=\"btn_toggle_details_").append(nodeId).append("\" type=\"button\" class=\"flux-tree-details-toggle\" ")
+              .append("aria-expanded=\"").append(isDetailsExpanded).append("\" aria-controls=\"details_").append(nodeId).append("\" ")
+              .append("onclick=\"event.stopPropagation(); FluxTree.toggleDetails('").append(nodeId).append("', '").append(treeId).append("')\" ")
+              .append("style=\"background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); color:var(--j-primary,#38bdf8); font-size:8.5px; border-radius:3px; padding:1px 5px; cursor:pointer; display:inline-flex; align-items:center; gap:2px;\">")
+              .append("<i class=\"fas fa-info-circle\"></i> Details</button>\n");
+        }
+
         sb.append("    </div>\n");
 
         // Right section: Actions
@@ -562,6 +610,16 @@ public class FluxTree<T> extends Widget {
         }
 
         sb.append("  </div>\n");
+
+        // Collapsible Node Details Panel
+        if (hasDetails) {
+            String detailsDisplay = isDetailsExpanded ? "block" : "none";
+            sb.append("  <div id=\"details_").append(nodeId).append("\" role=\"region\" class=\"flux-tree-details-panel\" ")
+              .append("aria-expanded=\"").append(isDetailsExpanded).append("\" ")
+              .append("style=\"display:").append(detailsDisplay).append("; margin-left:22px; margin-top:3px; margin-bottom:4px;\">\n");
+            sb.append(node.getDetails().render(theme)).append("\n");
+            sb.append("  </div>\n");
+        }
 
         // Subtree Child Group Container
         if (hasChildren) {

@@ -1,5 +1,6 @@
 package io.jettra.flux.widgets;
 
+import io.jettra.flux.core.JettraComponent;
 import io.jettra.flux.core.Widget;
 
 import java.util.ArrayList;
@@ -34,6 +35,8 @@ public class FluxTreeNode<T> {
     private FluxTreeNode<T> parent;
     private final List<FluxTreeNode<T>> children = new ArrayList<>();
     private final List<Widget> actions = new ArrayList<>();
+    private JettraComponent details;
+    private boolean detailsExpanded = false;
 
     public FluxTreeNode(String id, String label, T data) {
         this.id = Objects.requireNonNull(id, "Node ID cannot be null");
@@ -215,6 +218,40 @@ public class FluxTreeNode<T> {
             this.actions.addAll(actionWidgets);
         }
         return this;
+    }
+
+    public JettraComponent getDetails() {
+        return details;
+    }
+
+    public boolean hasDetails() {
+        return details != null;
+    }
+
+    public FluxTreeNode<T> withDetails(JettraComponent details) {
+        this.details = details;
+        return this;
+    }
+
+    public FluxTreeNode<T> details(JettraComponent details) {
+        return withDetails(details);
+    }
+
+    public boolean isDetailsExpanded() {
+        return detailsExpanded;
+    }
+
+    public FluxTreeNode<T> detailsExpanded(boolean detailsExpanded) {
+        this.detailsExpanded = detailsExpanded;
+        return this;
+    }
+
+    public void setDetailsExpanded(boolean detailsExpanded) {
+        this.detailsExpanded = detailsExpanded;
+    }
+
+    public void toggleDetails() {
+        this.detailsExpanded = !this.detailsExpanded;
     }
 
     // --- Recursive State Operations ---

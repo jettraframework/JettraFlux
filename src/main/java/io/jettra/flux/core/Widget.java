@@ -7,7 +7,7 @@ import java.util.UUID;
  * The base class for all UI elements in JettraEspressoUI.
  * Inspired by Flutter's Widget and Jetpack Compose's @Composable.
  */
-public abstract class Widget {
+public abstract class Widget implements JettraComponent {
     protected String id;
     protected Modifier modifier = new Modifier();
     protected java.util.function.Consumer<Object> onClick;
