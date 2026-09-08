@@ -476,6 +476,45 @@ public abstract class FluxBaseHandler implements HttpHandler {
             } catch (Exception ignored) {}
         }
 
+        if (contentType != null && contentType.toLowerCase().contains("multipart/form-data")) {
+            String boundary = null;
+            int bIdx = contentType.toLowerCase().indexOf("boundary=");
+            if (bIdx != -1) {
+                boundary = contentType.substring(bIdx + 9).trim();
+                int scIdx = boundary.indexOf(';');
+                if (scIdx != -1) boundary = boundary.substring(0, scIdx).trim();
+                if (boundary.startsWith("\"") && boundary.endsWith("\"") && boundary.length() > 1) {
+                    boundary = boundary.substring(1, boundary.length() - 1);
+                }
+            }
+            if (boundary != null && !boundary.isEmpty()) {
+                String delimiter = "--" + boundary;
+                String[] parts = body.split(java.util.regex.Pattern.quote(delimiter));
+                for (String part : parts) {
+                    if (part.isBlank() || part.equals("--\r\n") || part.equals("--") || part.startsWith("--")) continue;
+                    int headerEnd = part.indexOf("\r\n\r\n");
+                    int sepLen = 4;
+                    if (headerEnd == -1) {
+                        headerEnd = part.indexOf("\n\n");
+                        sepLen = 2;
+                    }
+                    if (headerEnd != -1) {
+                        String header = part.substring(0, headerEnd);
+                        String content = part.substring(headerEnd + sepLen);
+                        if (content.endsWith("\r\n")) content = content.substring(0, content.length() - 2);
+                        else if (content.endsWith("\n")) content = content.substring(0, content.length() - 1);
+
+                        java.util.regex.Matcher m = java.util.regex.Pattern.compile("name=\"([^\"]+)\"").matcher(header);
+                        if (m.find()) {
+                            String name = m.group(1);
+                            map.put(name, content);
+                        }
+                    }
+                }
+                return map;
+            }
+        }
+
         for (String pair : body.split("&")) {
             int eqIdx = pair.indexOf('=');
             try {
