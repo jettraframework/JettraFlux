@@ -2,15 +2,17 @@ package io.jettra.flux.widgets;
 
 import io.jettra.flux.theme.ColorMode;
 import io.jettra.flux.theme.Themes;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import io.jettra.test.annotation.DisplayName;
+import io.jettra.test.annotation.NotRequiresRunningServer;
+import io.jettra.test.annotation.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static io.jettra.test.core.JettraAssert.*;
 
 /**
  * Unit Test Suite for Dashboard Vertical Scrolling, Keyboard Accessibility,
  * Sticky Header anchoring, and Theme Token Scrollbar styling in JettraFlux.
  */
+@NotRequiresRunningServer
 public class DashboardScrollAccessibilityTest {
 
     @Test

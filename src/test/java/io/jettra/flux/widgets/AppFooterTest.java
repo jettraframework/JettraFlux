@@ -1,17 +1,19 @@
 package io.jettra.flux.widgets;
 
 import io.jettra.flux.theme.Themes;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import io.jettra.test.annotation.DisplayName;
+import io.jettra.test.annotation.NotRequiresRunningServer;
+import io.jettra.test.annotation.Test;
 
 import java.time.Year;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static io.jettra.test.core.JettraAssert.*;
 
 /**
  * Unit test suite for AppFooter and associated metadata records.
  */
+@NotRequiresRunningServer
 class AppFooterTest {
 
     @Test

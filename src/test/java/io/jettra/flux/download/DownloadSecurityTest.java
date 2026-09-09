@@ -1,13 +1,15 @@
 package io.jettra.flux.download;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+import io.jettra.test.annotation.DisplayName;
+import io.jettra.test.annotation.NotRequiresRunningServer;
+import io.jettra.test.annotation.TempDir;
+import io.jettra.test.annotation.Test;
 
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static io.jettra.test.core.JettraAssert.*;
 
+@NotRequiresRunningServer
 class DownloadSecurityTest {
 
     @Test

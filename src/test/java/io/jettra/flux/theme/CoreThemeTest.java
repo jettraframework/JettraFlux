@@ -1,10 +1,12 @@
 package io.jettra.flux.theme;
 
 import io.jettra.flux.widgets.*;
-import org.junit.jupiter.api.Test;
+import io.jettra.test.annotation.NotRequiresRunningServer;
+import io.jettra.test.annotation.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static io.jettra.test.core.JettraAssert.*;
 
+@NotRequiresRunningServer
 public class CoreThemeTest {
 
     @Test

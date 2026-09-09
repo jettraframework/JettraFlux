@@ -1,15 +1,17 @@
 package io.jettra.flux.widgets;
 
 import io.jettra.flux.theme.Themes;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import io.jettra.test.annotation.DisplayName;
+import io.jettra.test.annotation.NotRequiresRunningServer;
+import io.jettra.test.annotation.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static io.jettra.test.core.JettraAssert.*;
 
 /**
  * Unit tests validating the 5 new reactive UI components in JettraFlux:
  * JettraFluxModal, JettraFluxButton, JettraFluxDynamicForm, JettraFluxJsonEditor, JettraFluxNotification.
  */
+@NotRequiresRunningServer
 public class JettraFluxAdaptiveComponentsTest {
 
     @Test

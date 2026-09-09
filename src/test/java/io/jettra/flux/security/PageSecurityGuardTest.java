@@ -3,17 +3,19 @@ package io.jettra.flux.security;
 import io.jettra.core.login.NoLoginRequired;
 import jcf.AppRole;
 import jcf.annotation.PageWidgetAllow;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import io.jettra.test.annotation.AfterEach;
+import io.jettra.test.annotation.DisplayName;
+import io.jettra.test.annotation.NotRequiresRunningServer;
+import io.jettra.test.annotation.Test;
 
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static io.jettra.test.core.JettraAssert.*;
 
 /**
  * Unit test suite for JettraFlux Declarative RBAC and PageSecurityGuard.
  */
+@NotRequiresRunningServer
 class PageSecurityGuardTest {
 
     @AfterEach

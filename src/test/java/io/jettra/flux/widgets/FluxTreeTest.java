@@ -1,19 +1,21 @@
 package io.jettra.flux.widgets;
 
 import io.jettra.flux.theme.Themes;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import io.jettra.test.annotation.DisplayName;
+import io.jettra.test.annotation.NotRequiresRunningServer;
+import io.jettra.test.annotation.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static io.jettra.test.core.JettraAssert.*;
 
 /**
  * Unit test suite for FluxTree, FluxTreeNode, FluxTreeVisitor, and FluxTreeStateObserver.
  */
+@NotRequiresRunningServer
 public class FluxTreeTest {
 
     @Test

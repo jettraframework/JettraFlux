@@ -1,13 +1,15 @@
 package io.jettra.flux.transport;
 
 import io.jettra.flux.theme.Themes;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import io.jettra.test.annotation.DisplayName;
+import io.jettra.test.annotation.NotRequiresRunningServer;
+import io.jettra.test.annotation.Test;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static io.jettra.test.core.JettraAssert.*;
 
+@NotRequiresRunningServer
 public class JettraFluxTransportTest {
 
     @Test

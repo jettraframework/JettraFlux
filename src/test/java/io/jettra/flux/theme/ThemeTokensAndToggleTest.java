@@ -1,14 +1,22 @@
 package io.jettra.flux.theme;
 
 import io.jettra.flux.widgets.ThemeToggle;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import io.jettra.test.annotation.BeforeEach;
+import io.jettra.test.annotation.DisplayName;
+import io.jettra.test.annotation.EnumSource;
+import io.jettra.test.annotation.NotRequiresRunningServer;
+import io.jettra.test.annotation.ParameterizedTest;
+import io.jettra.test.annotation.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static io.jettra.test.core.JettraAssert.*;
 
+@NotRequiresRunningServer
 public class ThemeTokensAndToggleTest {
+
+    @BeforeEach
+    public void resetThemeContext() {
+        ThemeContext.getInstance().set(JettraTheme.MATRIX, ColorMode.DARK);
+    }
 
     @ParameterizedTest
     @EnumSource(JettraTheme.class)
