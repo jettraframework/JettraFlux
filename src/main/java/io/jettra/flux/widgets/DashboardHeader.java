@@ -53,6 +53,9 @@ public class DashboardHeader extends Widget {
     }
 
     private boolean sticky = true;
+    private boolean topToolbarVisible = true;
+    private boolean actionButtonsVisible = true;
+    private final List<Widget> actionButtons = new ArrayList<>();
 
     public DashboardHeader sticky(boolean sticky) {
         this.sticky = sticky;
@@ -63,12 +66,47 @@ public class DashboardHeader extends Widget {
         return sticky;
     }
 
+    public DashboardHeader withTopToolbarVisible(boolean visible) {
+        this.topToolbarVisible = visible;
+        return this;
+    }
+
+    public boolean isTopToolbarVisible() {
+        return topToolbarVisible;
+    }
+
+    public DashboardHeader withActionButtonsVisible(boolean visible) {
+        this.actionButtonsVisible = visible;
+        return this;
+    }
+
+    public boolean isActionButtonsVisible() {
+        return actionButtonsVisible;
+    }
+
+    public DashboardHeader actionButtons(Widget... buttons) {
+        if (buttons != null) {
+            for (Widget b : buttons) {
+                if (b != null) this.actionButtons.add(b);
+            }
+        }
+        return this;
+    }
+
     @Override
     public String render(ThemeData theme) {
+        if (!topToolbarVisible) {
+            return "";
+        }
+
         // Build the adjacent theme control bar
         DashboardThemeControlBar controlBar = DashboardThemeControlBar.of(currentTheme, colorMode);
 
-        List<Widget> rightSectionChildren = new ArrayList<>(rightItems);
+        List<Widget> rightSectionChildren = new ArrayList<>();
+        if (actionButtonsVisible) {
+            rightSectionChildren.addAll(actionButtons);
+        }
+        rightSectionChildren.addAll(rightItems);
         rightSectionChildren.add(controlBar);
 
         String stickyStyle = sticky ? "position: sticky; top: 0; z-index: 50; flex-shrink: 0; " : "flex-shrink: 0; ";
