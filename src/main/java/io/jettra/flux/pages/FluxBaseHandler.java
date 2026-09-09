@@ -287,9 +287,11 @@ public abstract class FluxBaseHandler implements HttpHandler {
         exchange.getResponseHeaders().set("Set-Cookie", "username=" + username + "; Path=" + cPath);
         exchange.getResponseHeaders().add("Set-Cookie", "role=" + role + "; Path=" + cPath);
         exchange.getResponseHeaders().add("Set-Cookie", "department=" + department + "; Path=" + cPath);
-        JettraContext.getCurrent().set(JettraContext.Scope.SESSION, "username", username);
-        JettraContext.getCurrent().set(JettraContext.Scope.SESSION, "role", role);
-        JettraContext.getCurrent().set(JettraContext.Scope.SESSION, "department", department);
+        if (JettraContext.getCurrent() != null) {
+            JettraContext.getCurrent().set(JettraContext.Scope.SESSION, "username", username);
+            JettraContext.getCurrent().set(JettraContext.Scope.SESSION, "role", role);
+            JettraContext.getCurrent().set(JettraContext.Scope.SESSION, "department", department);
+        }
     }
 
     protected void setSessionCookie(HttpExchange exchange, String username, String role) {
@@ -519,10 +521,12 @@ public abstract class FluxBaseHandler implements HttpHandler {
             int eqIdx = pair.indexOf('=');
             try {
                 if (eqIdx >= 0) {
-                    map.put(URLDecoder.decode(pair.substring(0, eqIdx), StandardCharsets.UTF_8),
-                            URLDecoder.decode(pair.substring(eqIdx + 1), StandardCharsets.UTF_8));
+                    String k = URLDecoder.decode(pair.substring(0, eqIdx), StandardCharsets.UTF_8);
+                    String v = URLDecoder.decode(pair.substring(eqIdx + 1), StandardCharsets.UTF_8);
+                    map.merge(k, v, (oldVal, newVal) -> oldVal.isEmpty() ? newVal : oldVal + "," + newVal);
                 } else if (!pair.isBlank()) {
-                    map.put(URLDecoder.decode(pair, StandardCharsets.UTF_8), "");
+                    String k = URLDecoder.decode(pair, StandardCharsets.UTF_8);
+                    map.putIfAbsent(k, "");
                 }
             } catch (Exception ignored) {}
         }
