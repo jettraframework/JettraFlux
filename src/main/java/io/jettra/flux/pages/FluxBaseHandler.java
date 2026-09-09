@@ -331,6 +331,9 @@ public abstract class FluxBaseHandler implements HttpHandler {
                 if (c.startsWith("username=")) {
                     return c.substring("username=".length());
                 }
+                if (c.startsWith("jettra_user=")) {
+                    return c.substring("jettra_user=".length());
+                }
             }
         }
         return null;
@@ -424,7 +427,7 @@ public abstract class FluxBaseHandler implements HttpHandler {
         return io.jettra.flux.theme.Themes.AstTheme(mode);
     }
 
-    private Map<String, String> parseQueryParams(String query) {
+    protected Map<String, String> parseQueryParams(String query) {
         Map<String, String> map = new HashMap<>();
         if (query == null || query.isEmpty()) return map;
         for (String pair : query.split("&")) {
@@ -441,7 +444,7 @@ public abstract class FluxBaseHandler implements HttpHandler {
         return map;
     }
 
-    private Map<String, String> parseRequestBody(HttpExchange exchange) throws IOException {
+    protected Map<String, String> parseRequestBody(HttpExchange exchange) throws IOException {
         InputStream is = exchange.getRequestBody();
         StringBuilder sb = new StringBuilder();
         byte[] buffer = new byte[1024];

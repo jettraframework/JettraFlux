@@ -76,4 +76,37 @@ public class MultiSelectAndBadgeListTest {
         assertTrue(legacyUser.isAuthorizedForDatabase("db2"), "CSV initialized user authorized for db2");
         assertFalse(legacyUser.isAuthorizedForDatabase("db3"), "CSV initialized user NOT authorized for db3");
     }
+
+    @Test
+    @DisplayName("JettraUserEditModal renders edit form with immutable username, roles, multiselect, and action buttons")
+    void testUserEditModalRender() {
+        JettraUserEditModal modal = JettraUserEditModal.of("editUserModal")
+            .title("Edit User Profile & Permissions")
+            .formAction("/users")
+            .actionName("update_user")
+            .roles("DB_ADMIN", "READ_WRITE", "READ_ONLY", "MANAGER")
+            .databases("records_store", "analytics_db", "system_db")
+            .submitText("Guardar Cambios")
+            .cancelText("Cancelar");
+
+        String html = modal.render(Themes.FlatTheme());
+
+        assertNotNull(html);
+        assertTrue(html.contains("id=\"editUserModal\""), "Must contain root overlay id");
+        assertTrue(html.contains("id=\"editUserModal_username\""), "Must contain username input");
+        assertTrue(html.contains("readonly"), "Username input must be readonly/immutable");
+        assertTrue(html.contains("fas fa-lock"), "Username input must display lock icon");
+        assertTrue(html.contains("id=\"editUserModal_role\""), "Must contain role selector");
+        assertTrue(html.contains("<option value=\"DB_ADMIN\">DB_ADMIN</option>"), "Must contain DB_ADMIN role option");
+        assertTrue(html.contains("<option value=\"READ_WRITE\">READ_WRITE</option>"), "Must contain READ_WRITE role option");
+        assertTrue(html.contains("id=\"editUserModal_active\""), "Must contain active status selector");
+        assertTrue(html.contains("id=\"editUserModal_password\""), "Must contain optional password reset input");
+        assertTrue(html.contains("id=\"editUserModal_dbs\""), "Must contain embedded MultiSelect for databases");
+        assertTrue(html.contains("records_store"), "Must list records_store in database options");
+        assertTrue(html.contains("Guardar Cambios"), "Must render submit button text");
+        assertTrue(html.contains("Cancelar"), "Must render cancel button text");
+        assertTrue(html.contains("window.JettraUserEditModal"), "Must include client-side lifecycle and hydration object");
+        assertTrue(html.contains("setSelectedValues"), "Client script must invoke MultiSelect.setSelectedValues");
+    }
 }
+
