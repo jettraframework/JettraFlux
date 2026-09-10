@@ -79,4 +79,33 @@ public class TopToolbarTest {
         assertFalse(html.contains("Visible Top Bar"));
         assertTrue(html.contains("Main Content"));
     }
+
+    @Test
+    @DisplayName("DashboardLayout propagates withActionButtonsVisible(false) to TopToolbar and DashboardHeader")
+    void testDashboardLayoutSuppressesActionButtons() {
+        TopToolbar toolbar = TopToolbar.of()
+            .addLeft(Span.of("Dashboard Title"))
+            .actionButtons(Button.of("+ DB"), Button.of("Backup"));
+
+        DashboardLayout layout = DashboardLayout.of(toolbar, Div.of(Text.of("Body Content")))
+            .withActionButtonsVisible(false);
+
+        String html = layout.render(Themes.Dark());
+        assertTrue(html.contains("Dashboard Title"));
+        assertFalse(html.contains("+ DB"));
+        assertFalse(html.contains("Backup"));
+        assertTrue(html.contains("Body Content"));
+
+        DashboardHeader header = DashboardHeader.of("Components Title")
+            .actionButtons(Button.of("+ DB"), Button.of("Restore"));
+
+        DashboardLayout layoutWithHeader = DashboardLayout.of(header, Div.of(Text.of("Components Content")))
+            .withActionButtonsVisible(false);
+
+        String htmlHeader = layoutWithHeader.render(Themes.Dark());
+        assertTrue(htmlHeader.contains("Components Title"));
+        assertFalse(htmlHeader.contains("+ DB"));
+        assertFalse(htmlHeader.contains("Restore"));
+        assertTrue(htmlHeader.contains("Components Content"));
+    }
 }

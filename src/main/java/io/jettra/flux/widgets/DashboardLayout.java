@@ -53,6 +53,7 @@ public class DashboardLayout extends Widget {
     }
 
     private boolean topToolbarVisible = true;
+    private boolean actionButtonsVisible = true;
 
     public DashboardLayout withTopToolbarVisible(boolean visible) {
         this.topToolbarVisible = visible;
@@ -61,6 +62,15 @@ public class DashboardLayout extends Widget {
 
     public boolean isTopToolbarVisible() {
         return topToolbarVisible;
+    }
+
+    public DashboardLayout withActionButtonsVisible(boolean visible) {
+        this.actionButtonsVisible = visible;
+        return this;
+    }
+
+    public boolean isActionButtonsVisible() {
+        return actionButtonsVisible;
     }
 
     public Widget getHeader() {
@@ -81,8 +91,10 @@ public class DashboardLayout extends Widget {
         if (header != null && topToolbarVisible) {
             if (header instanceof TopToolbar tt) {
                 tt.withTopToolbarVisible(topToolbarVisible);
+                tt.withActionButtonsVisible(actionButtonsVisible);
             } else if (header instanceof DashboardHeader dh) {
                 dh.withTopToolbarVisible(topToolbarVisible);
+                dh.withActionButtonsVisible(actionButtonsVisible);
             }
             root.add(header);
         }
