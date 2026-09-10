@@ -8,6 +8,7 @@ public class TextField extends Widget {
     private final String name;
 
     private String value = "";
+    private ValidationState validationState = ValidationState.none();
 
     private TextField(String name, String placeholder) {
         this.name = name;
@@ -31,6 +32,15 @@ public class TextField extends Widget {
         return this;
     }
 
+    public TextField withValidationState(ValidationState state) {
+        this.validationState = state != null ? state : ValidationState.none();
+        return this;
+    }
+
+    public ValidationState getValidationState() {
+        return validationState;
+    }
+
     @Override
     public TextField binding(String property) {
         super.binding(property);
@@ -47,6 +57,8 @@ public class TextField extends Widget {
     public String render(ThemeData theme) {
         String valAttr = (value != null && !value.isEmpty()) ? " value=\"" + value.replace("\"", "&quot;") + "\"" : "";
         String inputName = modifier.getAttributes().containsKey("name") ? modifier.getAttributes().remove("name") : name;
-        return "<input type=\"text\" name=\"" + inputName + "\"" + valAttr + " placeholder=\"" + placeholder + "\" " + renderCommonAttributes(theme, "espresso-textfield form-control") + " />";
+        String stateClass = validationState.isInvalid() ? " is-invalid" : (validationState.isValid() ? " is-valid" : "");
+        String ariaInvalid = validationState.isInvalid() ? " aria-invalid=\"true\"" : "";
+        return "<input type=\"text\" name=\"" + inputName + "\"" + valAttr + " placeholder=\"" + placeholder + "\"" + ariaInvalid + " " + renderCommonAttributes(theme, "espresso-textfield form-control" + stateClass) + " />";
     }
 }
