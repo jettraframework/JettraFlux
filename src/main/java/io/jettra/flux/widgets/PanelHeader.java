@@ -18,6 +18,7 @@ public class PanelHeader extends Widget {
     private String icon = "";
     private String iconColor = "#38bdf8";
     private Badge badge;
+    private boolean actionsVisible = true;
     private final List<Widget> actions = new ArrayList<>();
 
     public PanelHeader() {}
@@ -79,6 +80,15 @@ public class PanelHeader extends Widget {
     public PanelHeader badge(String text, String severity) {
         this.badge = Badge.of(text, severity);
         return this;
+    }
+
+    public PanelHeader withActionsVisible(boolean visible) {
+        this.actionsVisible = visible;
+        return this;
+    }
+
+    public boolean isActionsVisible() {
+        return actionsVisible;
     }
 
     public PanelHeader addAction(Widget action) {
@@ -148,7 +158,7 @@ public class PanelHeader extends Widget {
         sb.append("  </div>\n");
 
         // Right Section: Action widgets
-        if (!actions.isEmpty()) {
+        if (!actions.isEmpty() && actionsVisible) {
             sb.append("  <div style=\"display: flex; align-items: center; gap: 10px; flex-wrap: wrap;\">\n");
             for (Widget action : actions) {
                 sb.append("    ").append(action.render(theme)).append("\n");
@@ -171,6 +181,7 @@ public class PanelHeader extends Widget {
         public PanelHeaderBuilder iconColor(String iconColor) { header.iconColor(iconColor); return this; }
         public PanelHeaderBuilder badge(Badge badge) { header.badge(badge); return this; }
         public PanelHeaderBuilder badge(String text, String severity) { header.badge(text, severity); return this; }
+        public PanelHeaderBuilder withActionsVisible(boolean visible) { header.withActionsVisible(visible); return this; }
         public PanelHeaderBuilder addAction(Widget action) { header.addAction(action); return this; }
         public PanelHeaderBuilder actions(Widget... actions) { header.actions(actions); return this; }
         public PanelHeader build() { return header; }

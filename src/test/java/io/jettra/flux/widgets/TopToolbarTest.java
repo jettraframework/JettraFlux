@@ -108,4 +108,18 @@ public class TopToolbarTest {
         assertFalse(htmlHeader.contains("Restore"));
         assertTrue(htmlHeader.contains("Components Content"));
     }
+
+    @Test
+    @DisplayName("PanelHeader suppresses action widgets when withActionsVisible(false)")
+    void testPanelHeaderSuppressesActions() {
+        PanelHeader header = PanelHeader.of("Databases Title", "Overview of instances")
+            .actions(Button.of("+ DB"), Button.of("Export"))
+            .withActionsVisible(false);
+
+        String html = header.render(Themes.Dark());
+        assertTrue(html.contains("Databases Title"));
+        assertTrue(html.contains("Overview of instances"));
+        assertFalse(html.contains("+ DB"));
+        assertFalse(html.contains("Export"));
+    }
 }
