@@ -45,6 +45,12 @@ public class JettraFluxSelect extends Widget {
         return this;
     }
 
+    @Override
+    public JettraFluxSelect modifier(Modifier modifier) {
+        super.modifier(modifier);
+        return this;
+    }
+
     public JettraFluxSelect name(String name) {
         this.name = name;
         return this;
