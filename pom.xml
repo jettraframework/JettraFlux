@@ -13,6 +13,7 @@
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+         <jettra.ee.version>1.0.0-SNAPSHOT</jettra.ee.version>
         <jettra.appserver.version>1.0.0-SNAPSHOT</jettra.appserver.version>
         <jettra.annotation.version>1.0.0-SNAPSHOT</jettra.annotation.version>
     </properties>
@@ -21,12 +22,13 @@
     <dependencies>
         <dependency>
             <groupId>io.jettra</groupId>
-            <artifactId>JettraAppServer</artifactId>
-            <version>${jettra.appserver.version}</version>
+            <artifactId>JettraEE</artifactId>
+            <version>${jettra.ee.version}</version>
             <scope>provided</scope>
         </dependency>
+
         
-        <dependency>
+       <dependency>
             <groupId>io.jettra</groupId>
             <artifactId>JettraJSON</artifactId>
             <version>1.0.0-SNAPSHOT</version>
