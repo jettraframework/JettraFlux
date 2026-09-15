@@ -13,9 +13,12 @@
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-         <jettra.ee.version>1.0.0-SNAPSHOT</jettra.ee.version>
+        <jettra.ee.version>1.0.0-SNAPSHOT</jettra.ee.version>
         <jettra.appserver.version>1.0.0-SNAPSHOT</jettra.appserver.version>
-        <jettra.annotation.version>1.0.0-SNAPSHOT</jettra.annotation.version>
+        <jettra.annotation.version>1.0.0</jettra.annotation.version>
+        <jettra.json.version>1.0.0</jettra.json.version>
+        <jettra.test.version>1.0.0</jettra.test.version>
+        <jettra.rules.version>1.0.0</jettra.rules.version>
     </properties>
 
 
@@ -27,25 +30,34 @@
             <scope>provided</scope>
         </dependency>
 
-        
-       <dependency>
-            <groupId>io.jettra</groupId>
-            <artifactId>JettraJSON</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+        <dependency>
+            <groupId>com.github.jettraframework</groupId>
+            <artifactId>JettraRules</artifactId>
+            <version>${jettra.rules.version}</version>
             <scope>provided</scope>
         </dependency>
-        
         <dependency>
-            <groupId>io.jettra</groupId>
+            <groupId>com.github.jettraframework</groupId>
             <artifactId>JettraAnnotation</artifactId>
             <version>${jettra.annotation.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.jettra</groupId>
-            <artifactId>JettraRules</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <groupId>com.github.jettraframework</groupId>
+            <artifactId>JettraJSON</artifactId>
+            <version>${jettra.json.version}</version>
+            <scope>provided</scope>
         </dependency>
-          <dependency>
+        
+     
+     
+      
+        <dependency>
+            <groupId>com.github.jettraframework</groupId>
+            <artifactId>JettraTest</artifactId>
+            <version>${jettra.test.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.google.auto.service</groupId>
             <artifactId>auto-service</artifactId>
             <version>1.1.1</version>
@@ -56,20 +68,13 @@
             <artifactId>javapoet</artifactId>
             <version>1.13.0</version>
         </dependency>
-        <dependency>
-            <groupId>io.jettra</groupId>
-            <artifactId>JettraTest</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
-        
     </dependencies>
-	<repositories>
-		<repository>
-		    <id>jitpack.io</id>
-		    <url>https://jitpack.io</url>
-		</repository>
-	</repositories>
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>
