@@ -6,15 +6,13 @@
 
     <groupId>io.jettra</groupId>
     <artifactId>JettraFlux</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <properties>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jettra.ee.version>1.0.0-SNAPSHOT</jettra.ee.version>
-        <jettra.appserver.version>1.0.0-SNAPSHOT</jettra.appserver.version>
         <jettra.annotation.version>1.0.0</jettra.annotation.version>
         <jettra.json.version>1.0.0</jettra.json.version>
         <jettra.test.version>1.0.0</jettra.test.version>
@@ -23,13 +21,6 @@
 
 
     <dependencies>
-        <dependency>
-            <groupId>io.jettra</groupId>
-            <artifactId>JettraEE</artifactId>
-            <version>${jettra.ee.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
         <dependency>
             <groupId>com.github.jettraframework</groupId>
             <artifactId>JettraRules</artifactId>

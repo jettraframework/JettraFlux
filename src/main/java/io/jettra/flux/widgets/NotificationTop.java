@@ -78,10 +78,10 @@ public class NotificationTop extends Widget {
     }
     
     public static void broadcast(String idnotification, NotificationTopType targetType, String message) {
-        io.jettra.server.core.JettraContext ctx = io.jettra.server.core.JettraContext.getCurrent();
+        io.jettra.flux.core.FluxContext ctx = io.jettra.flux.core.FluxContext.getCurrent();
         String currentSessionId = ctx != null ? ctx.getSessionId() : null;
         
-        java.util.Map<String, java.util.Map<String, Object>> allSessions = io.jettra.server.core.JettraContext.getSessions();
+        java.util.Map<String, java.util.Map<String, Object>> allSessions = io.jettra.flux.core.FluxContext.getSessions();
         if (allSessions == null) return;
         
         for (java.util.Map.Entry<String, java.util.Map<String, Object>> entry : allSessions.entrySet()) {

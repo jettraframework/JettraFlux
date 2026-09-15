@@ -10,7 +10,7 @@ import io.jettra.flux.widgets.Div;
 import io.jettra.flux.widgets.RawHtml;
 import io.jettra.flux.widgets.Scaffold;
 import io.jettra.flux.widgets.Span;
-import io.jettra.server.JettraServer;
+import io.jettra.flux.core.FluxConfig;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -21,7 +21,7 @@ public class SwaggerUIPage implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        String resolvedUrl = JettraServer.resolvePath(openApiUrl);
+        String resolvedUrl = FluxConfig.resolvePath(openApiUrl);
         ThemeData theme = Themes.AstTheme();
 
         Widget themeSwitch = Div.of(

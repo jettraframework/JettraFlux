@@ -3,9 +3,8 @@ package io.jettra.flux.pages;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import io.jettra.flux.core.Widget;
-import io.jettra.flux.theme.ThemeData;
-import io.jettra.server.JettraServer;
-import io.jettra.server.core.JettraContext;
+import io.jettra.flux.core.FluxConfig;
+import io.jettra.flux.core.FluxContext;
 
 import io.jettra.flux.security.PageSecurityGuard;
 import io.jettra.flux.security.SecurityContext;
@@ -66,7 +65,7 @@ public abstract class FluxBaseHandler implements HttpHandler {
         if (params.containsKey("change_lang")) {
             io.jettra.flux.core.LanguageFlux.changeLanguage(exchange, params.get("change_lang"));
             String path = exchange.getRequestURI().getPath();
-            String cPath = io.jettra.server.JettraServer.getContextPath();
+            String cPath = FluxConfig.getContextPath();
             String relPath = path;
             if (cPath != null && path.startsWith(cPath)) {
                 relPath = path.substring(cPath.length());
@@ -212,7 +211,7 @@ public abstract class FluxBaseHandler implements HttpHandler {
     }
 
     protected void redirect(HttpExchange exchange, String path) throws IOException {
-        exchange.getResponseHeaders().set("Location", JettraServer.resolvePath(path));
+        exchange.getResponseHeaders().set("Location", FluxConfig.resolvePath(path));
         exchange.sendResponseHeaders(302, -1);
         exchange.getResponseBody().close();
     }
@@ -260,7 +259,7 @@ public abstract class FluxBaseHandler implements HttpHandler {
                             .modifier(new io.jettra.flux.core.Modifier().style("font-size: 14px; margin-bottom: 12px; opacity: 0.85;")),
                         allowedRolesStr.isEmpty() ? io.jettra.flux.widgets.Div.of() : io.jettra.flux.widgets.Paragraph.of(allowedRolesStr)
                             .modifier(new io.jettra.flux.core.Modifier().style("font-size: 12px; font-weight: 600; margin-bottom: 20px; opacity: 0.7;")),
-                        io.jettra.flux.widgets.Link.of(JettraServer.resolvePath("/login"), "Volver al Inicio")
+                        io.jettra.flux.widgets.Link.of(FluxConfig.resolvePath("/login"), "Volver al Inicio")
                             .modifier(new io.jettra.flux.core.Modifier().style("display: inline-block; padding: 10px 20px; background: #0284c7; color: white; border-radius: 6px; text-decoration: none; font-weight: 600;"))
                     ).modifier(new io.jettra.flux.core.Modifier().style("display: flex; flex-direction: column; align-items: center; text-align: center; padding: 32px 24px;"))
                 ).modifier(new io.jettra.flux.core.Modifier().style("max-width: 480px; width: 90%; margin: 60px auto;"))
@@ -282,15 +281,15 @@ public abstract class FluxBaseHandler implements HttpHandler {
     }
 
     protected void setSessionCookie(HttpExchange exchange, String username, String role, String department) {
-        String cPath = JettraServer.getContextPath();
+        String cPath = FluxConfig.getContextPath();
         if (cPath == null || cPath.isEmpty()) cPath = "/";
         exchange.getResponseHeaders().set("Set-Cookie", "username=" + username + "; Path=" + cPath);
         exchange.getResponseHeaders().add("Set-Cookie", "role=" + role + "; Path=" + cPath);
         exchange.getResponseHeaders().add("Set-Cookie", "department=" + department + "; Path=" + cPath);
-        if (JettraContext.getCurrent() != null) {
-            JettraContext.getCurrent().set(JettraContext.Scope.SESSION, "username", username);
-            JettraContext.getCurrent().set(JettraContext.Scope.SESSION, "role", role);
-            JettraContext.getCurrent().set(JettraContext.Scope.SESSION, "department", department);
+        if (FluxContext.getCurrent() != null) {
+            FluxContext.getCurrent().set(FluxContext.Scope.SESSION, "username", username);
+            FluxContext.getCurrent().set(FluxContext.Scope.SESSION, "role", role);
+            FluxContext.getCurrent().set(FluxContext.Scope.SESSION, "department", department);
         }
     }
 
@@ -303,22 +302,22 @@ public abstract class FluxBaseHandler implements HttpHandler {
     }
 
     protected void clearSessionCookie(HttpExchange exchange) {
-        String cPath = JettraServer.getContextPath();
+        String cPath = FluxConfig.getContextPath();
         if (cPath == null || cPath.isEmpty()) cPath = "/";
         exchange.getResponseHeaders().set("Set-Cookie", "username=; Path=" + cPath + "; Max-Age=0");
         exchange.getResponseHeaders().add("Set-Cookie", "role=; Path=" + cPath + "; Max-Age=0");
         exchange.getResponseHeaders().add("Set-Cookie", "department=; Path=" + cPath + "; Max-Age=0");
-        if (JettraContext.getCurrent() != null) {
-            JettraContext.getCurrent().set(JettraContext.Scope.SESSION, "username", "");
-            JettraContext.getCurrent().set(JettraContext.Scope.SESSION, "role", "");
-            JettraContext.getCurrent().set(JettraContext.Scope.SESSION, "department", "");
-            JettraContext.getCurrent().set(JettraContext.Scope.SESSION, "credentialFlux", "");
+        if (FluxContext.getCurrent() != null) {
+            FluxContext.getCurrent().set(FluxContext.Scope.SESSION, "username", "");
+            FluxContext.getCurrent().set(FluxContext.Scope.SESSION, "role", "");
+            FluxContext.getCurrent().set(FluxContext.Scope.SESSION, "department", "");
+            FluxContext.getCurrent().set(FluxContext.Scope.SESSION, "credentialFlux", "");
         }
     }
 
     protected String getLoggedUser(HttpExchange exchange) {
-        if (JettraContext.getCurrent() != null) {
-            Object userObj = JettraContext.getCurrent().get(JettraContext.Scope.SESSION, "username");
+        if (FluxContext.getCurrent() != null) {
+            Object userObj = FluxContext.getCurrent().get(FluxContext.Scope.SESSION, "username");
             if (userObj != null && !userObj.toString().trim().isEmpty()) {
                 return userObj.toString();
             }
@@ -340,8 +339,8 @@ public abstract class FluxBaseHandler implements HttpHandler {
     }
 
     protected String getLoggedRole(HttpExchange exchange) {
-        if (JettraContext.getCurrent() != null) {
-            Object roleObj = JettraContext.getCurrent().get(JettraContext.Scope.SESSION, "role");
+        if (FluxContext.getCurrent() != null) {
+            Object roleObj = FluxContext.getCurrent().get(FluxContext.Scope.SESSION, "role");
             if (roleObj != null && !roleObj.toString().trim().isEmpty()) {
                 return roleObj.toString();
             }
@@ -360,8 +359,8 @@ public abstract class FluxBaseHandler implements HttpHandler {
     }
 
     protected String getLoggedDepartment(HttpExchange exchange) {
-        if (JettraContext.getCurrent() != null) {
-            Object deptObj = JettraContext.getCurrent().get(JettraContext.Scope.SESSION, "department");
+        if (FluxContext.getCurrent() != null) {
+            Object deptObj = FluxContext.getCurrent().get(FluxContext.Scope.SESSION, "department");
             if (deptObj != null) {
                 return deptObj.toString();
             }
@@ -558,7 +557,7 @@ public abstract class FluxBaseHandler implements HttpHandler {
 
     private void injectSecurityHeartbeat(StringBuilder builder) {
         long startTime = io.jettra.flux.sync.JettraSyncManager.SERVER_START_TIME;
-        String loginPath = io.jettra.server.JettraServer.resolvePath("/login");
+        String loginPath = FluxConfig.resolvePath("/login");
         
         builder.append("<script>\n")
                .append("  const J_SERVER_START_TIME = ").append(startTime).append(";\n")
