@@ -478,6 +478,25 @@ public abstract class FluxBaseHandler implements HttpHandler {
                     return map;
                 }
             } catch (Exception ignored) {}
+
+            // Robust fallback: if full object parsing encountered issues (e.g. unescaped chars in payload),
+            // extract top-level string/primitive keys so action, target_id, etc. are preserved.
+            try {
+                java.util.regex.Matcher m = java.util.regex.Pattern.compile("\"([a-zA-Z0-9_]+)\"\\s*:\\s*(\"[^\"]*\"|true|false|[0-9.-]+)").matcher(body);
+                while (m.find()) {
+                    String k = m.group(1);
+                    String v = m.group(2);
+                    if (v.startsWith("\"") && v.endsWith("\"")) {
+                        v = v.substring(1, v.length() - 1);
+                    }
+                    if (!map.containsKey(k)) {
+                        map.put(k, v);
+                    }
+                }
+                if (map.containsKey("action") || map.containsKey("target_id")) {
+                    return map;
+                }
+            } catch (Exception ignored) {}
         }
 
         if (contentType != null && contentType.toLowerCase().contains("multipart/form-data")) {
