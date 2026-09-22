@@ -211,6 +211,52 @@ public class FluxTree<T> extends Widget {
     }
 
     /**
+     * Recursively collapses all child subtrees in memory while preserving the root level nodes.
+     *
+     * @return this tree for fluent chaining
+     */
+    public FluxTree<T> collapseAllSubtrees() {
+        for (FluxTreeNode<T> root : rootNodes) {
+            root.collapseSubtrees();
+        }
+        for (FluxTreeStateObserver<T> observer : observers) {
+            try {
+                observer.onTreeCollapsedAll();
+            } catch (Exception ignored) {}
+        }
+        return this;
+    }
+
+    /**
+     * Recursively collapses all node details panels in the tree while preserving
+     * visible node rows (condensing record payload information).
+     *
+     * @return this tree for fluent chaining
+     */
+    public FluxTree<T> collapseAllDetails() {
+        for (FluxTreeNode<T> root : rootNodes) {
+            root.collapseAllDetails();
+        }
+        return this;
+    }
+
+    /**
+     * Propagates recursive collapse across the entire hierarchical tree and its subtrees.
+     *
+     * @param preserveRoots whether to keep root database nodes expanded
+     * @return this tree for fluent chaining
+     */
+    public FluxTree<T> collapseHierarchical(boolean preserveRoots) {
+        if (preserveRoots) {
+            collapseAllSubtrees();
+            collapseAllDetails();
+        } else {
+            collapseAll();
+        }
+        return this;
+    }
+
+    /**
      * Applies an immutable expansion state record to matching nodes in the tree.
      *
      * @param state node expansion state
@@ -489,35 +535,78 @@ public class FluxTree<T> extends Widget {
           .append("      }\n")
           .append("      groups[i].style.display = 'none';\n")
           .append("    }\n")
-          .append("    var nodes = root.querySelectorAll('.flux-tree-node');\n")
+          .append("    var subtrees = root.querySelectorAll('.tree-collapsible-content, .db-subtree-container, [id^=\"eng_subtree_\"], [id^=\"unit_subtree_\"], [id^=\"item_detail_\"]');\n")
+          .append("    for (var s = 0; s < subtrees.length; s++) {\n")
+          .append("      if (preserveRoot && subtrees[s].classList.contains('db-subtree-container')) {\n")
+          .append("        subtrees[s].style.display = 'block';\n")
+          .append("        subtrees[s].setAttribute('aria-expanded', 'true');\n")
+          .append("        continue;\n")
+          .append("      }\n")
+          .append("      subtrees[s].style.display = 'none';\n")
+          .append("      subtrees[s].setAttribute('aria-expanded', 'false');\n")
+          .append("      if (subtrees[s].hasAttribute('data-state')) subtrees[s].setAttribute('data-state', 'collapsed');\n")
+          .append("    }\n")
+          .append("    var nodes = root.querySelectorAll('.flux-tree-node, [role=\"treeitem\"]');\n")
           .append("    for (var j = 0; j < nodes.length; j++) {\n")
           .append("      if (preserveRoot && nodes[j].parentElement === root) {\n")
           .append("        nodes[j].setAttribute('aria-expanded', 'true');\n")
           .append("        continue;\n")
           .append("      }\n")
           .append("      nodes[j].setAttribute('aria-expanded', 'false');\n")
+          .append("      if (nodes[j].hasAttribute('data-state')) nodes[j].setAttribute('data-state', 'collapsed');\n")
           .append("    }\n")
-          .append("    var btns = root.querySelectorAll('.flux-tree-toggle-btn');\n")
+          .append("    var btns = root.querySelectorAll('.flux-tree-toggle-btn, .flux-tree-details-toggle, [id^=\"btn_toggle_\"]');\n")
           .append("    for (var k = 0; k < btns.length; k++) {\n")
           .append("      if (preserveRoot && btns[k].closest('.flux-tree-node') && btns[k].closest('.flux-tree-node').parentElement === root) {\n")
           .append("        btns[k].setAttribute('aria-expanded', 'true');\n")
           .append("        continue;\n")
           .append("      }\n")
           .append("      btns[k].setAttribute('aria-expanded', 'false');\n")
+          .append("      if (btns[k].hasAttribute('data-state')) btns[k].setAttribute('data-state', 'collapsed');\n")
           .append("    }\n")
-          .append("    var icons = root.querySelectorAll('.flux-tree-toggle-icon');\n")
+          .append("    var icons = root.querySelectorAll('.flux-tree-toggle-icon, .tree-toggle-icon');\n")
           .append("    for (var l = 0; l < icons.length; l++) {\n")
           .append("      if (preserveRoot && icons[l].closest('.flux-tree-node') && icons[l].closest('.flux-tree-node').parentElement === root) {\n")
           .append("        icons[l].className = 'fas fa-chevron-down flux-tree-toggle-icon';\n")
           .append("        continue;\n")
           .append("      }\n")
-          .append("      icons[l].className = 'fas fa-chevron-right flux-tree-toggle-icon';\n")
+          .append("      if (icons[l].className.indexOf('fa-caret-') >= 0) {\n")
+          .append("        icons[l].className = 'fas fa-caret-right tree-toggle-icon';\n")
+          .append("      } else {\n")
+          .append("        icons[l].className = 'fas fa-chevron-right flux-tree-toggle-icon';\n")
+          .append("      }\n")
           .append("    }\n")
           .append("    var detailsPanels = root.querySelectorAll('.flux-tree-details-panel');\n")
-          .append("    for (var d = 0; d < detailsPanels.length; d++) { detailsPanels[d].style.display = 'none'; detailsPanels[d].setAttribute('aria-expanded', 'false'); }\n")
+          .append("    for (var d = 0; d < detailsPanels.length; d++) {\n")
+          .append("      detailsPanels[d].style.display = 'none';\n")
+          .append("      detailsPanels[d].setAttribute('aria-expanded', 'false');\n")
+          .append("    }\n")
           .append("  };\n")
           .append("  window.FluxTree.collapseToRoot = function(treeId) {\n")
           .append("    window.FluxTree.collapseAll(treeId, true);\n")
+          .append("  };\n")
+          .append("  window.FluxTree.collapseSubtrees = function(treeId) {\n")
+          .append("    window.FluxTree.collapseAll(treeId, true);\n")
+          .append("  };\n")
+          .append("  window.FluxTree.collapseAllDetails = function(treeId) {\n")
+          .append("    var root = treeId ? document.getElementById(treeId) : document;\n")
+          .append("    if (!root) root = document;\n")
+          .append("    var detailsPanels = root.querySelectorAll('.flux-tree-details-panel, [id^=\"item_detail_\"]');\n")
+          .append("    for (var d = 0; d < detailsPanels.length; d++) {\n")
+          .append("      detailsPanels[d].style.display = 'none';\n")
+          .append("      detailsPanels[d].setAttribute('aria-expanded', 'false');\n")
+          .append("    }\n")
+          .append("    var detailBtns = root.querySelectorAll('.flux-tree-details-toggle');\n")
+          .append("    for (var b = 0; b < detailBtns.length; b++) {\n")
+          .append("      detailBtns[b].setAttribute('aria-expanded', 'false');\n")
+          .append("    }\n")
+          .append("    var detailIcons = root.querySelectorAll('[id^=\"icon_details_\"], [id^=\"icon_item_detail_\"]');\n")
+          .append("    for (var i = 0; i < detailIcons.length; i++) {\n")
+          .append("      detailIcons[i].className = 'fas fa-chevron-right flux-tree-toggle-icon';\n")
+          .append("    }\n")
+          .append("  };\n")
+          .append("  window.FluxTree.collapseHierarchical = function(treeId, preserveRoot) {\n")
+          .append("    window.FluxTree.collapseAll(treeId, preserveRoot);\n")
           .append("  };\n")
           .append("</script>\n");
 

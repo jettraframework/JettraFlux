@@ -259,4 +259,57 @@ public class FluxTreeTest {
         assertTrue(expandHtml.contains("FluxTree.expandAll('test_tree')"), "Expand button must call FluxTree.expandAll");
         assertTrue(collapseHtml.contains("FluxTree.collapseToRoot('test_tree')"), "Collapse button must call FluxTree.collapseToRoot");
     }
+
+    @Test
+    @DisplayName("Test Hierarchical and Subtree Collapse: collapseAllSubtrees, collapseAllDetails, and collapseHierarchical")
+    public void testHierarchicalCollapseAndDetailsCondensing() {
+        FluxTreeNode<String> root = FluxTreeNode.of("db_root", "database");
+        FluxTreeNode<String> engine = FluxTreeNode.of("eng_doc", "DOCUMENT");
+        FluxTreeNode<String> unit = FluxTreeNode.of("unit_users", "users");
+        FluxTreeNode<String> item = FluxTreeNode.of("item_u1", "u1");
+
+        item.details(Div.of(Text.of("Payload JSON content")));
+        item.detailsExpanded(true);
+
+        unit.child(item);
+        engine.child(unit);
+        root.child(engine);
+
+        FluxTree<String> tree = FluxTree.of(root);
+
+        // Expand all in memory
+        tree.expandAll();
+        item.detailsExpanded(true);
+
+        assertTrue(root.isExpanded());
+        assertTrue(engine.isExpanded());
+        assertTrue(unit.isExpanded());
+        assertTrue(item.isExpanded());
+        assertTrue(item.isDetailsExpanded());
+
+        // Test collapseAllDetails: condenses record info while leaving nodes visible
+        tree.collapseAllDetails();
+        assertTrue(root.isExpanded());
+        assertTrue(engine.isExpanded());
+        assertTrue(unit.isExpanded());
+        assertTrue(item.isExpanded());
+        assertFalse(item.isDetailsExpanded(), "Details panel must be condensed/collapsed");
+
+        // Test collapseHierarchical preserving roots: leaves root open, collapses child subtrees and details
+        item.detailsExpanded(true);
+        tree.collapseHierarchical(true);
+        assertTrue(root.isExpanded(), "Root must remain expanded when preserving roots");
+        assertFalse(engine.isExpanded(), "Child engine subtree must be collapsed");
+        assertFalse(unit.isExpanded(), "Child unit subtree must be collapsed");
+        assertFalse(item.isDetailsExpanded(), "Item details must be collapsed");
+
+        // Test global collapseHierarchical without preserving roots
+        tree.expandAll();
+        tree.collapseHierarchical(false);
+        assertFalse(root.isExpanded(), "Root must be collapsed when preserveRoots is false");
+        assertFalse(engine.isExpanded());
+        assertFalse(unit.isExpanded());
+        assertFalse(item.isDetailsExpanded());
+    }
 }
+

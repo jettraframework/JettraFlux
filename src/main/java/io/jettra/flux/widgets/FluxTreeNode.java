@@ -282,12 +282,40 @@ public class FluxTreeNode<T> {
     }
 
     /**
-     * Recursively collapses this node and all of its descendants.
+     * Recursively collapses this node and all of its descendants,
+     * including attached record details panels.
      *
      * @return this node for fluent chaining
      */
     public FluxTreeNode<T> collapseAll() {
         this.expanded = false;
+        this.detailsExpanded = false;
+        for (FluxTreeNode<T> child : children) {
+            child.collapseAll();
+        }
+        return this;
+    }
+
+    /**
+     * Recursively collapses all detail panels across this node and its descendants,
+     * condensing record information while maintaining the parent hierarchy structure.
+     *
+     * @return this node for fluent chaining
+     */
+    public FluxTreeNode<T> collapseAllDetails() {
+        this.detailsExpanded = false;
+        for (FluxTreeNode<T> child : children) {
+            child.collapseAllDetails();
+        }
+        return this;
+    }
+
+    /**
+     * Recursively collapses all child subtrees while leaving this node's expansion intact.
+     *
+     * @return this node for fluent chaining
+     */
+    public FluxTreeNode<T> collapseSubtrees() {
         for (FluxTreeNode<T> child : children) {
             child.collapseAll();
         }
@@ -315,6 +343,7 @@ public class FluxTreeNode<T> {
             this.expanded = true;
         } else {
             this.expanded = false;
+            this.detailsExpanded = false;
         }
         for (FluxTreeNode<T> child : children) {
             child.collapseAll();
