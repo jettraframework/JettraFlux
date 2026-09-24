@@ -283,7 +283,7 @@ public abstract class FluxBaseHandler implements HttpHandler {
     protected void setSessionCookie(HttpExchange exchange, String username, String role, String department) {
         String cPath = FluxConfig.getContextPath();
         if (cPath == null || cPath.isEmpty()) cPath = "/";
-        exchange.getResponseHeaders().set("Set-Cookie", "username=" + username + "; Path=" + cPath);
+        exchange.getResponseHeaders().add("Set-Cookie", "username=" + username + "; Path=" + cPath);
         exchange.getResponseHeaders().add("Set-Cookie", "role=" + role + "; Path=" + cPath);
         exchange.getResponseHeaders().add("Set-Cookie", "department=" + department + "; Path=" + cPath);
         if (FluxContext.getCurrent() != null) {
@@ -304,7 +304,7 @@ public abstract class FluxBaseHandler implements HttpHandler {
     protected void clearSessionCookie(HttpExchange exchange) {
         String cPath = FluxConfig.getContextPath();
         if (cPath == null || cPath.isEmpty()) cPath = "/";
-        exchange.getResponseHeaders().set("Set-Cookie", "username=; Path=" + cPath + "; Max-Age=0");
+        exchange.getResponseHeaders().add("Set-Cookie", "username=; Path=" + cPath + "; Max-Age=0");
         exchange.getResponseHeaders().add("Set-Cookie", "role=; Path=" + cPath + "; Max-Age=0");
         exchange.getResponseHeaders().add("Set-Cookie", "department=; Path=" + cPath + "; Max-Age=0");
         if (FluxContext.getCurrent() != null) {
